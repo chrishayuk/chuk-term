@@ -340,35 +340,70 @@ class TestGlobalThemeFunctions:
 
     def test_set_theme(self):
         """Test setting global theme."""
-        with patch("chuk_term.ui.output.get_output") as mock_get_output:
-            mock_output = Mock()
-            mock_get_output.return_value = mock_output
+        # Mock the imported get_output function
+        mock_output = Mock()
+        mock_output.set_theme = Mock()
+        mock_get_output = Mock(return_value=mock_output)
 
+        # Temporarily inject the mock into sys.modules
+        import sys
+
+        old_module = sys.modules.get("chuk_term.ui.output")
+        mock_module = Mock()
+        mock_module.get_output = mock_get_output
+        sys.modules["chuk_term.ui.output"] = mock_module
+
+        try:
             theme = set_theme("dark")
-
             assert theme.name == "dark"
             assert isinstance(theme.colors, DarkColorScheme)
-
-            # Should notify output system if it has set_theme method
-            if hasattr(mock_output, "set_theme"):
-                mock_output.set_theme.assert_called_once_with(theme)
+            # Should notify output system
+            mock_output.set_theme.assert_called_once_with(theme)
+        finally:
+            # Restore original module
+            if old_module:
+                sys.modules["chuk_term.ui.output"] = old_module
+            else:
+                sys.modules.pop("chuk_term.ui.output", None)
 
     def test_set_theme_without_output(self):
         """Test setting theme when output module not available."""
-        with patch("chuk_term.ui.output.get_output", side_effect=ImportError):
+        # Mock the module to raise ImportError
+        import sys
+
+        old_module = sys.modules.get("chuk_term.ui.output")
+        sys.modules["chuk_term.ui.output"] = None  # Will cause ImportError on import
+
+        try:
             theme = set_theme("minimal")
             assert theme.name == "minimal"
             # Should not raise error
+        finally:
+            # Restore original module
+            if old_module:
+                sys.modules["chuk_term.ui.output"] = old_module
+            else:
+                sys.modules.pop("chuk_term.ui.output", None)
 
     def test_use_custom_theme(self):
         """Test using a custom theme instance."""
         custom_theme = Theme("custom")
         custom_theme.colors.primary = "purple"
 
-        with patch("chuk_term.ui.output.get_output") as mock_get_output:
-            mock_output = Mock()
-            mock_get_output.return_value = mock_output
+        # Mock the imported get_output function
+        mock_output = Mock()
+        mock_output.set_theme = Mock()
+        mock_get_output = Mock(return_value=mock_output)
 
+        # Temporarily inject the mock into sys.modules
+        import sys
+
+        old_module = sys.modules.get("chuk_term.ui.output")
+        mock_module = Mock()
+        mock_module.get_output = mock_get_output
+        sys.modules["chuk_term.ui.output"] = mock_module
+
+        try:
             use_theme(custom_theme)
 
             # Global theme should be the custom instance
@@ -377,8 +412,13 @@ class TestGlobalThemeFunctions:
             assert chuk_term.ui.theme._theme is custom_theme
 
             # Should notify output system
-            if hasattr(mock_output, "set_theme"):
-                mock_output.set_theme.assert_called_once_with(custom_theme)
+            mock_output.set_theme.assert_called_once_with(custom_theme)
+        finally:
+            # Restore original module
+            if old_module:
+                sys.modules["chuk_term.ui.output"] = old_module
+            else:
+                sys.modules.pop("chuk_term.ui.output", None)
 
 
 class TestHelperFunctions:
