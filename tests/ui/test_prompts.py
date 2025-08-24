@@ -89,73 +89,108 @@ class TestGetKey:
         with patch.dict("sys.modules", {"msvcrt": mock_msvcrt}), pytest.raises(KeyboardInterrupt):
             _get_key()
 
+    @pytest.mark.skipif(sys.platform == "win32", reason="Unix-specific test")
     @patch("sys.platform", "linux")
     @patch("sys.stdin")
-    @patch("termios.tcsetattr")
-    @patch("termios.tcgetattr")
-    @patch("tty.setraw")
-    def test_get_key_unix_normal(self, mock_setraw, mock_tcgetattr, mock_tcsetattr, mock_stdin):
+    def test_get_key_unix_normal(self, mock_stdin):
         """Test getting normal key on Unix."""
-        mock_stdin.fileno.return_value = 0
-        mock_stdin.read.return_value = "a"
-        mock_tcgetattr.return_value = []
+        # Mock Unix-specific modules
+        mock_termios = Mock()
+        mock_tty = Mock()
 
-        assert _get_key() == "a"
-        mock_setraw.assert_called_once()
+        with patch.dict("sys.modules", {"termios": mock_termios, "tty": mock_tty}):  # noqa: SIM117
+            with patch("chuk_term.ui.prompts.HAS_TERMIOS", True):
+                with patch("chuk_term.ui.prompts.termios.tcsetattr"):
+                    with patch("chuk_term.ui.prompts.termios.tcgetattr") as mock_tcgetattr:
+                        with patch("chuk_term.ui.prompts.tty.setraw") as mock_setraw:
+                            mock_stdin.fileno.return_value = 0
+                            mock_stdin.read.return_value = "a"
+                            mock_tcgetattr.return_value = []
 
+                            assert _get_key() == "a"
+                            mock_setraw.assert_called_once()
+
+    @pytest.mark.skipif(sys.platform == "win32", reason="Unix-specific test")
     @patch("sys.platform", "linux")
     @patch("sys.stdin")
-    @patch("termios.tcsetattr")
-    @patch("termios.tcgetattr")
-    @patch("tty.setraw")
-    def test_get_key_unix_arrow(self, mock_setraw, mock_tcgetattr, mock_tcsetattr, mock_stdin):
+    def test_get_key_unix_arrow(self, mock_stdin):
         """Test getting arrow keys on Unix."""
-        mock_stdin.fileno.return_value = 0
-        mock_stdin.read.side_effect = ["\x1b", "[", "A"]  # Up arrow
-        mock_tcgetattr.return_value = []
+        # Mock Unix-specific modules
+        mock_termios = Mock()
+        mock_tty = Mock()
 
-        assert _get_key() == "up"
+        with patch.dict("sys.modules", {"termios": mock_termios, "tty": mock_tty}):  # noqa: SIM117
+            with patch("chuk_term.ui.prompts.HAS_TERMIOS", True):
+                with patch("chuk_term.ui.prompts.termios.tcsetattr"):
+                    with patch("chuk_term.ui.prompts.termios.tcgetattr") as mock_tcgetattr:
+                        with patch("chuk_term.ui.prompts.tty.setraw"):
+                            mock_stdin.fileno.return_value = 0
+                            mock_stdin.read.side_effect = ["\x1b", "[", "A"]  # Up arrow
+                            mock_tcgetattr.return_value = []
 
+                            assert _get_key() == "up"
+
+    @pytest.mark.skipif(sys.platform == "win32", reason="Unix-specific test")
     @patch("sys.platform", "linux")
     @patch("sys.stdin")
-    @patch("termios.tcsetattr")
-    @patch("termios.tcgetattr")
-    @patch("tty.setraw")
-    def test_get_key_unix_enter(self, mock_setraw, mock_tcgetattr, mock_tcsetattr, mock_stdin):
+    def test_get_key_unix_enter(self, mock_stdin):
         """Test getting Enter key on Unix."""
-        mock_stdin.fileno.return_value = 0
-        mock_stdin.read.return_value = "\n"
-        mock_tcgetattr.return_value = []
+        # Mock Unix-specific modules
+        mock_termios = Mock()
+        mock_tty = Mock()
 
-        assert _get_key() == "enter"
+        with patch.dict("sys.modules", {"termios": mock_termios, "tty": mock_tty}):  # noqa: SIM117
+            with patch("chuk_term.ui.prompts.HAS_TERMIOS", True):
+                with patch("chuk_term.ui.prompts.termios.tcsetattr"):
+                    with patch("chuk_term.ui.prompts.termios.tcgetattr") as mock_tcgetattr:
+                        with patch("chuk_term.ui.prompts.tty.setraw"):
+                            mock_stdin.fileno.return_value = 0
+                            mock_stdin.read.return_value = "\n"
+                            mock_tcgetattr.return_value = []
 
+                            assert _get_key() == "enter"
+
+    @pytest.mark.skipif(sys.platform == "win32", reason="Unix-specific test")
     @patch("sys.platform", "linux")
     @patch("sys.stdin")
-    @patch("termios.tcsetattr")
-    @patch("termios.tcgetattr")
-    @patch("tty.setraw")
-    def test_get_key_unix_ctrl_c(self, mock_setraw, mock_tcgetattr, mock_tcsetattr, mock_stdin):
+    def test_get_key_unix_ctrl_c(self, mock_stdin):
         """Test Ctrl+C on Unix."""
-        mock_stdin.fileno.return_value = 0
-        mock_stdin.read.return_value = "\x03"
-        mock_tcgetattr.return_value = []
+        # Mock Unix-specific modules
+        mock_termios = Mock()
+        mock_tty = Mock()
 
-        with pytest.raises(KeyboardInterrupt):
-            _get_key()
+        with patch.dict("sys.modules", {"termios": mock_termios, "tty": mock_tty}):  # noqa: SIM117
+            with patch("chuk_term.ui.prompts.HAS_TERMIOS", True):
+                with patch("chuk_term.ui.prompts.termios.tcsetattr"):
+                    with patch("chuk_term.ui.prompts.termios.tcgetattr") as mock_tcgetattr:
+                        with patch("chuk_term.ui.prompts.tty.setraw"):
+                            mock_stdin.fileno.return_value = 0
+                            mock_stdin.read.return_value = "\x03"
+                            mock_tcgetattr.return_value = []
 
+                            with pytest.raises(KeyboardInterrupt):
+                                _get_key()
+
+    @pytest.mark.skipif(sys.platform == "win32", reason="Unix-specific test")
     @patch("sys.platform", "linux")
     @patch("sys.stdin")
-    @patch("termios.tcsetattr")
-    @patch("termios.tcgetattr")
-    @patch("tty.setraw")
-    def test_get_key_unix_ctrl_d(self, mock_setraw, mock_tcgetattr, mock_tcsetattr, mock_stdin):
+    def test_get_key_unix_ctrl_d(self, mock_stdin):
         """Test Ctrl+D on Unix."""
-        mock_stdin.fileno.return_value = 0
-        mock_stdin.read.return_value = "\x04"
-        mock_tcgetattr.return_value = []
+        # Mock Unix-specific modules
+        mock_termios = Mock()
+        mock_tty = Mock()
 
-        with pytest.raises(EOFError):
-            _get_key()
+        with patch.dict("sys.modules", {"termios": mock_termios, "tty": mock_tty}):  # noqa: SIM117
+            with patch("chuk_term.ui.prompts.HAS_TERMIOS", True):
+                with patch("chuk_term.ui.prompts.termios.tcsetattr"):
+                    with patch("chuk_term.ui.prompts.termios.tcgetattr") as mock_tcgetattr:
+                        with patch("chuk_term.ui.prompts.tty.setraw"):
+                            mock_stdin.fileno.return_value = 0
+                            mock_stdin.read.return_value = "\x04"
+                            mock_tcgetattr.return_value = []
+
+                            with pytest.raises(EOFError):
+                                _get_key()
 
 
 class TestAsk:
