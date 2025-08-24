@@ -7,10 +7,17 @@ Provides consistent user input prompts, confirmations, and selections.
 from __future__ import annotations
 
 import sys
-import termios
 import time
-import tty
 from typing import Any, TypeVar
+
+# Unix-only modules - import conditionally
+try:
+    import termios
+    import tty
+
+    HAS_TERMIOS = True
+except ImportError:
+    HAS_TERMIOS = False
 
 from rich.prompt import Confirm, FloatPrompt, IntPrompt, Prompt
 from rich.table import Table
@@ -54,8 +61,8 @@ def _get_key() -> str:
             raise KeyboardInterrupt
         else:
             return key.decode("utf-8", errors="ignore")
-    else:
-        # Unix/Linux/Mac
+    elif HAS_TERMIOS:
+        # Unix/Linux/Mac with termios support
         fd = sys.stdin.fileno()
         old_settings = termios.tcgetattr(fd)
         try:
@@ -85,6 +92,21 @@ def _get_key() -> str:
         finally:
             termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
         return ""  # Default return to satisfy type checker
+    else:
+        # Fallback for systems without termios or msvcrt
+        # This won't support arrow keys but basic input will work
+        try:
+            key = sys.stdin.read(1)
+            if key == "\r" or key == "\n":
+                return "enter"
+            elif key == " ":
+                return "space"
+            elif key == "\x03":
+                raise KeyboardInterrupt
+            else:
+                return key
+        except Exception:
+            return ""
 
 
 def ask(
