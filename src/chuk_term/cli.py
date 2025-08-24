@@ -66,7 +66,7 @@ def demo() -> None:
 
     if confirm("Would you like to see the available themes?"):
         themes = ["default", "dark", "light", "minimal", "terminal", "monokai", "dracula"]
-        theme = select_from_list(themes, "Choose a theme:")
+        theme = select_from_list("Choose a theme:", themes)
         set_theme(theme)
         output.info(f"Theme changed to: {theme}")
 
