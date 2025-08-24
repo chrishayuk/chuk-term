@@ -268,11 +268,13 @@ uv run pytest
 # Check coverage
 uv run pytest --cov=chuk_term
 
-# Lint code
-uv run ruff check src/ tests/
+# Run all quality checks
+make check  # Runs ruff, black, mypy, and pytest
 
-# Format code
-uv run black src/ tests/
+# Or run individually:
+uv run ruff check src/ tests/  # Lint code
+uv run black src/ tests/       # Format code
+uv run mypy src/                # Type check
 ```
 
 ## Example: Complete AI Agent Task
@@ -354,8 +356,10 @@ MIT License - See LICENSE file for details
 ## Contributing
 
 Contributions welcome! Please ensure:
-- All tests pass
+- All tests pass (pytest)
 - Code is formatted with black
+- Code passes linting (ruff)
+- Type hints pass checks (mypy)
 - New features include tests
 - Documentation is updated
 

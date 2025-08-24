@@ -497,7 +497,7 @@ def _print_tree_terminal(data: dict[str, Any], prefix: str, show_sizes: bool) ->
             ui.print(f"{prefix}{current_prefix}{name}{size_str}")
 
 
-def _build_rich_tree(tree, data: dict[str, Any], show_sizes: bool, show_icons: bool) -> None:
+def _build_rich_tree(tree: Any, data: dict[str, Any], show_sizes: bool, show_icons: bool) -> None:
     """Build a rich Tree object."""
     for name, value in data.items():
         if isinstance(value, dict):

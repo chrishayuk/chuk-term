@@ -221,7 +221,7 @@ def format_json(data: Any, *, title: str | None = None, syntax_highlight: bool =
         if theme.name in ("minimal", "terminal"):
             return error_msg
         else:
-            return Text(error_msg, style="red")
+            return Text(error_msg, style="red")  # type: ignore[return-value]
 
     # Minimal/Terminal mode - plain text
     if theme.name in ("minimal", "terminal"):

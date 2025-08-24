@@ -40,14 +40,30 @@ target-version = ['py310']
 ```
 
 ### 3. MyPy - Type Checker
-**Purpose**: Static type checking for Python code.
+**Purpose**: Static type checking for Python code to catch type-related bugs before runtime.
 
 **Configuration**: `pyproject.toml`
 ```toml
 [tool.mypy]
 python_version = "3.10"
+warn_return_any = true
+warn_unused_configs = true
+no_implicit_reexport = true
+disallow_untyped_defs = false  # Relaxed for gradual typing
+disallow_any_unimported = false
+check_untyped_defs = true
+strict_equality = true
+warn_redundant_casts = true
+warn_unused_ignores = false
 ignore_missing_imports = true
-strict_optional = true
+
+[[tool.mypy.overrides]]
+module = "tests.*"
+ignore_errors = true
+
+[[tool.mypy.overrides]]
+module = "chuk_term.ui.*"
+disallow_untyped_defs = false  # UI modules use gradual typing
 ```
 
 ## Running Code Quality Checks
@@ -73,9 +89,12 @@ uv run black src/ tests/
 # Type checking
 uv run mypy src/
 
-# Run everything at once
+# Run all quality checks at once
+make check
+# Or manually:
 uv run ruff check src/ tests/ && \
 uv run black --check src/ tests/ && \
+uv run mypy src/ && \
 uv run pytest
 ```
 
@@ -94,6 +113,49 @@ pre-commit run --all-files
 ```
 
 ## Common Issues and Solutions
+
+### MyPy Errors
+
+#### Missing Type Annotations
+```python
+# Error: Function is missing a return type annotation
+def process(data):
+    return data * 2
+
+# Fix: Add type hints
+def process(data: int) -> int:
+    return data * 2
+
+# Or suppress if intentional
+def process(data):  # type: ignore[no-untyped-def]
+    return data * 2
+```
+
+#### Incompatible Types
+```python
+# Error: Incompatible return value type
+def get_value() -> str:
+    return None  # Error!
+
+# Fix: Use Optional
+from typing import Optional
+
+def get_value() -> Optional[str]:
+    return None
+
+# Or use union syntax (Python 3.10+)
+def get_value() -> str | None:
+    return None
+```
+
+#### Type Ignore Comments
+```python
+# Ignore specific error
+result = complex_function()  # type: ignore[return-value]
+
+# Ignore all errors on a line (use sparingly!)
+result = complex_function()  # type: ignore
+```
 
 ### Ruff Errors
 
@@ -306,7 +368,7 @@ complex_matrix = [
 ### Current Status
 - ✅ All files pass Ruff checks
 - ✅ All files formatted with Black
-- ⚠️ MyPy coverage: Partial (work in progress)
+- ✅ MyPy type checking passes (with gradual typing)
 
 ### Quality Goals
 - Zero Ruff errors in production code

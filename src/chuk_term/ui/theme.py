@@ -135,7 +135,7 @@ class Theme:
             Icons instance
         """
         if name == "minimal" or name == "terminal":
-            return MinimalIcons()
+            return MinimalIcons()  # type: ignore[return-value]
         else:
             return Icons()  # Default with emojis
 
@@ -251,7 +251,7 @@ class Theme:
 class DarkColorScheme(ColorScheme):
     """Dark theme color scheme."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__(
             success="bright_green",
             error="bright_red",
@@ -267,7 +267,7 @@ class DarkColorScheme(ColorScheme):
 class LightColorScheme(ColorScheme):
     """Light theme color scheme (for light terminals)."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__(
             success="dark_green",
             error="dark_red",
@@ -284,7 +284,7 @@ class LightColorScheme(ColorScheme):
 class MinimalColorScheme(ColorScheme):
     """Minimal color scheme with no colors and plain output."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__(
             # No colors - all white/default
             success="white",
@@ -312,7 +312,7 @@ class MinimalColorScheme(ColorScheme):
 class TerminalColorScheme(ColorScheme):
     """Terminal color scheme using only basic ANSI colors."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__(
             success="green",
             error="red",
@@ -472,7 +472,7 @@ def __getattr__(name: str) -> str:
 # ─────────────────────────── Convenience Functions ─────────────────────────
 
 
-def apply_theme_to_output(output_instance) -> None:
+def apply_theme_to_output(output_instance: object) -> None:
     """
     Apply current theme to an Output instance.
 

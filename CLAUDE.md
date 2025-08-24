@@ -95,60 +95,53 @@ chuk-term/
 ⚙️ **[Full Installation Guide](docs/ui/GETTING_STARTED.md#installation)**
 ```bash
 # Install with dev dependencies
+make dev-install
+# Or using uv directly:
 uv sync --dev
-
-# Install pre-commit hooks
-pre-commit install
 ```
 
 ### Testing
 🧪 **[Testing Documentation](docs/testing/UNIT_TESTING.md)**
 ```bash
-# Run all tests with coverage (351 tests)
+# Run all tests
+make test
+
+# Run tests with coverage report (current: 71%)
+make test-cov
+
+# Or using uv directly:
 uv run pytest --cov=chuk_term
-
-# Run specific test file
 uv run pytest tests/ui/test_output.py -v
-
-# Generate coverage report (current: 71%)
-uv run pytest --cov=chuk_term --cov-report=html
 ```
 
 ### Code Quality
 🎯 **[Code Quality Standards](docs/testing/CODE_QUALITY.md)** | **[Best Practices](docs/testing/UNIT_TESTING.md#best-practices)**
 ```bash
-# Linting
-uv run ruff check src/ tests/
-
-# Auto-fix linting issues
-uv run ruff check --fix src/ tests/
-
-# Format code
-uv run black src/ tests/
-
-# Type checking
-uv run mypy src/
-
-# Run all checks (if Makefile exists)
+# Run all checks (linting, formatting, type checking, tests)
 make check
+
+# Individual commands:
+make lint       # Check code quality with ruff and black
+make format     # Auto-fix formatting issues
+make typecheck  # Run mypy type checking
+
+# Or using uv directly:
+uv run ruff check src/ tests/
+uv run black --check src/ tests/
+uv run mypy src/
 ```
 
 ### Running Examples
 📂 **[Browse All Examples](examples/)**
 ```bash
-# UI components demo
+# Run interactive demo
+make demo
+
+# Or run specific examples:
 uv run python examples/ui_demo.py
-
-# Code display demo
 uv run python examples/ui_code_demo.py
-
-# Output system demo
 uv run python examples/ui_output_demo.py
-
-# Terminal management demo
 uv run python examples/ui_terminal_demo.py
-
-# Theme demonstration
 uv run python examples/ui_theme_independence.py
 ```
 
@@ -159,6 +152,8 @@ chuk-term info
 chuk-term info --verbose
 
 # Run interactive demo
+make demo
+# Or:
 chuk-term demo
 
 # Test with specific theme
@@ -323,6 +318,9 @@ When making changes to this codebase, you MUST:
    # Check formatting (MUST pass before committing)
    uv run black --check src/ tests/
    
+   # Check type hints (MUST pass before committing)
+   uv run mypy src/
+   
    # Auto-fix issues if needed
    uv run ruff check --fix --unsafe-fixes src/ tests/
    uv run black src/ tests/
@@ -331,40 +329,78 @@ When making changes to this codebase, you MUST:
 2. **Run Tests** - Verify your changes don't break existing functionality:
    ```bash
    # Run all tests
-   uv run pytest
+   make test
    
    # Run with coverage to ensure no regression
-   uv run pytest --cov=chuk_term
+   make test-cov
    ```
 
 3. **Complete Verification Command** - Use this single command to verify everything:
    ```bash
-   # Run all checks (linting, formatting, and tests)
-   uv run ruff check src/ tests/ && \
-   uv run black --check src/ tests/ && \
-   uv run pytest
+   # Run all checks (linting, formatting, type checking, and tests)
+   make check
+   # This runs: ruff, black, mypy, and pytest
    ```
 
 ### When to Run Checks
 - **ALWAYS** after making code changes
 - **BEFORE** suggesting code is complete
-- **WHEN** the user asks you to "fix linting" or "check tests"
-- **IF** you see import errors or syntax issues
+- **WHEN** the user asks you to "fix linting", "check types", or "check tests"
+- **IF** you see import errors, type errors, or syntax issues
 
 ### Common Issues and Solutions
 - **Unused imports (F401)**: Remove or add `# noqa: F401` if intentional
 - **Unused arguments (ARG001/ARG002)**: Use `_` prefix or add `# noqa: ARG002` for test mocks
 - **Line too long**: Keep lines under 120 characters
 - **Formatting issues**: Run `uv run black src/ tests/` to auto-fix
+- **Type errors**: Add type hints or use `# type: ignore` comments sparingly
+- **Missing return type**: Add `-> None` for functions that don't return a value
 
 ### Test Coverage Target
 - Current coverage: 71%
 - Target coverage: >80%
 - Never let coverage drop below current level
 
+## Build and Publishing
+
+### Building the Package
+```bash
+# Build distribution packages
+make build
+```
+
+### Publishing to PyPI
+📦 **[Full Publishing Guide](docs/PACKAGE_MANAGEMENT.md#publishing-chukterm)**
+```bash
+# Check PyPI credentials
+make info
+
+# Publish to TestPyPI first (recommended)
+make publish-test
+
+# Publish to PyPI
+make publish
+```
+
+### Utility Commands
+```bash
+# Show project info and credential status
+make info
+
+# Clean build artifacts
+make clean
+
+# Deep clean everything
+make clean-all
+
+# Show all available commands
+make help
+```
+
 # important-instruction-reminders
 Do what has been asked; nothing more, nothing less.
 NEVER create files unless they're absolutely necessary for achieving your goal.
 ALWAYS prefer editing an existing file to creating a new one.
 NEVER proactively create documentation files (*.md) or README files. Only create documentation files if explicitly requested by the User.
-ALWAYS run code quality checks (linting, formatting, tests) after making code changes.
+ALWAYS run code quality checks (linting, formatting, type checking, tests) after making code changes.
+Use `make check` to run all quality checks at once (ruff, black, mypy, pytest).

@@ -514,7 +514,7 @@ class Output:
             subtitle = f"Response time: {elapsed:.2f}s" if elapsed else None
 
             try:
-                content = Markdown(message or "[No Response]")
+                content: Any = Markdown(message or "[No Response]")
             except Exception:
                 content = Text(message or "[No Response]")
 
@@ -801,11 +801,14 @@ class Output:
             prompt_text += ": "
 
             result = input(prompt_text)
-            return result if result else default
+            return result if result else (default or "")
         else:
             from rich.prompt import Prompt
 
-            return Prompt.ask(message, default=default, console=self._console)
+            if default is None:
+                return Prompt.ask(message, console=self._console)
+            else:
+                return Prompt.ask(message, default=default, console=self._console)
 
     def confirm(self, message: str, default: bool = False) -> bool:
         """

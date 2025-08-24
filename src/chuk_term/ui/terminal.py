@@ -11,6 +11,7 @@ import gc
 import logging
 import os
 import sys
+from collections.abc import Iterator
 from contextlib import contextmanager, suppress
 
 logger = logging.getLogger(__name__)
@@ -77,7 +78,7 @@ class TerminalManager:
             if not is_running:
                 # Get all tasks
                 try:
-                    pending = asyncio.all_tasks(loop) if hasattr(asyncio, "all_tasks") else asyncio.Task.all_tasks(loop)
+                    pending = asyncio.all_tasks(loop) if hasattr(asyncio, "all_tasks") else set()  # type: ignore[attr-defined]
 
                     # Only cancel tasks that aren't done
                     tasks = [t for t in pending if not t.done()]
@@ -214,7 +215,7 @@ class TerminalManager:
 
     @staticmethod
     @contextmanager
-    def alternate_screen():
+    def alternate_screen() -> Iterator[None]:
         """
         Context manager for alternate screen.
 
@@ -451,7 +452,7 @@ def get_terminal_info() -> dict:
 
 
 @contextmanager
-def alternate_screen():
+def alternate_screen() -> Iterator[None]:
     """Context manager for alternate screen buffer."""
     with TerminalManager.alternate_screen():
         yield

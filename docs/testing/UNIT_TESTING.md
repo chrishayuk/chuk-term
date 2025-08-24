@@ -339,7 +339,7 @@ uv run pytest tests/ --cov=chuk_term --cov-report=html
 
 # Using Makefile commands
 make test          # Run all tests with coverage
-make check         # Run all checks (lint, format, typecheck, test)
+make check         # Run all checks (ruff, black, mypy, pytest)
 ```
 
 Target coverage levels:

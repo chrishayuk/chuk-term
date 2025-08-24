@@ -190,44 +190,50 @@ uv pip show package-name
 
 ## Makefile Integration
 
-ChukTerm's Makefile is configured to use uv:
+ChukTerm's Makefile provides comprehensive commands for development and publishing:
 
 ```makefile
-# Install dependencies
-install:
-	uv sync
+# Installation commands
+make install      # Install package in current environment
+make dev-install  # Install with dev dependencies
 
-# Install with dev dependencies
-dev:
-	uv sync --dev
+# Testing commands
+make test         # Run tests
+make test-cov     # Run tests with coverage report
 
-# Run tests
-test:
-	uv run pytest --cov=chuk_term
+# Code quality commands
+make lint         # Check code quality with ruff and black
+make format       # Auto-fix formatting issues
+make typecheck    # Run type checking with mypy
+make check        # Run all checks (lint, typecheck, test)
 
-# Run specific test file
-test-file:
-	uv run pytest tests/ui/test_output.py -v
+# Build and publish commands
+make build        # Build distribution packages
+make publish      # Build and publish to PyPI
+make publish-test # Build and publish to TestPyPI
 
-# Linting
-lint:
-	uv run ruff check src/ tests/
+# Utility commands
+make demo         # Run the interactive demo
+make info         # Show project information and PyPI credentials
+make clean        # Remove Python bytecode and basic artifacts
+make clean-all    # Deep clean everything (cache, build, test artifacts)
+make help         # Show all available commands
+```
 
-# Format code
-format:
-	uv run black src/ tests/
+### Common Development Workflow
 
-# Type checking
-typecheck:
-	uv run mypy src/
+```bash
+# Initial setup
+make dev-install
 
-# Run all checks
-check: lint format typecheck test
+# After making changes
+make format       # Fix formatting
+make check        # Run all checks
 
-# Clean build artifacts
-clean:
-	rm -rf build/ dist/ *.egg-info htmlcov/ .coverage
-	find . -type d -name __pycache__ -exec rm -rf {} +
+# Build and test publishing
+make build        # Create distribution packages
+make publish-test # Test on TestPyPI first
+make publish      # Publish to PyPI (requires credentials)
 ```
 
 ## CI/CD Integration
@@ -445,25 +451,104 @@ open htmlcov/index.html  # View coverage in browser
 
 ## Publishing ChukTerm
 
-### Build Package
+### Prerequisites
+
+1. **PyPI Account**: Create accounts on [PyPI](https://pypi.org) and [TestPyPI](https://test.pypi.org)
+2. **Credentials**: Configure authentication using one of these methods:
+   - **~/.pypirc file** (recommended):
+     ```ini
+     [distutils]
+     index-servers =
+         pypi
+         testpypi
+     
+     [pypi]
+     username = __token__
+     password = pypi-YOUR_TOKEN_HERE
+     
+     [testpypi]
+     username = __token__
+     password = pypi-YOUR_TEST_TOKEN_HERE
+     ```
+   - **Environment variables**:
+     ```bash
+     export TWINE_USERNAME="__token__"
+     export TWINE_PASSWORD="pypi-YOUR_TOKEN_HERE"
+     ```
+
+3. **Install twine**: Required for uploading to PyPI
+   ```bash
+   pip install twine
+   ```
+
+### Build and Publish Workflow
 
 ```bash
-# Build distribution files
-uv build
+# 1. Update version in pyproject.toml
+# Edit version = "0.1.0" to your new version
 
-# Check build artifacts
-ls dist/
+# 2. Clean previous builds
+make clean-build
+
+# 3. Build distribution packages
+make build
+# This creates wheel and source distributions in dist/
+
+# 4. Test on TestPyPI first (recommended)
+make publish-test
+# Verify at https://test.pypi.org/project/chuk-term/
+
+# 5. Publish to PyPI
+make publish
+# Package will be available at https://pypi.org/project/chuk-term/
+
+# 6. Verify installation
+pip install chuk-term
 ```
 
-### Publish to PyPI
+### Using the Makefile
+
+The Makefile simplifies the publishing process:
 
 ```bash
-# Test on TestPyPI first
-uv publish --repository testpypi
+# Check your setup
+make info  # Shows PyPI credential status
 
-# Publish to PyPI
-uv publish
+# One-command publish (builds first)
+make publish      # Publishes to PyPI
+make publish-test # Publishes to TestPyPI
+
+# Manual process
+make build        # Just build packages
+twine check dist/*  # Verify packages
+twine upload dist/* # Manual upload
 ```
+
+### Troubleshooting Publishing
+
+**Authentication errors**:
+```bash
+# Check credentials
+make info  # Shows if .pypirc or env vars are configured
+
+# Test credentials
+twine upload --repository testpypi dist/* --verbose
+```
+
+**Build errors**:
+```bash
+# Clean and rebuild
+make clean-all
+make build
+
+# Verify build
+twine check dist/*
+```
+
+**Version conflicts**:
+- PyPI doesn't allow re-uploading the same version
+- Always increment version in pyproject.toml before publishing
+- Use TestPyPI to test releases first
 
 ## Related Documentation
 
