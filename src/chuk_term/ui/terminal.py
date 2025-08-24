@@ -11,7 +11,7 @@ import gc
 import logging
 import os
 import sys
-from contextlib import contextmanager
+from contextlib import contextmanager, suppress
 
 logger = logging.getLogger(__name__)
 
@@ -40,7 +40,7 @@ class TerminalManager:
     def restore() -> None:
         """
         Fully restore terminal and clean up resources.
-        
+
         This should be called on application exit.
         """
         # Reset terminal settings
@@ -77,10 +77,7 @@ class TerminalManager:
             if not is_running:
                 # Get all tasks
                 try:
-                    if hasattr(asyncio, 'all_tasks'):
-                        pending = asyncio.all_tasks(loop)
-                    else:
-                        pending = asyncio.Task.all_tasks(loop)
+                    pending = asyncio.all_tasks(loop) if hasattr(asyncio, "all_tasks") else asyncio.Task.all_tasks(loop)
 
                     # Only cancel tasks that aren't done
                     tasks = [t for t in pending if not t.done()]
@@ -90,13 +87,8 @@ class TerminalManager:
 
                     # Give tasks a chance to cancel gracefully
                     if tasks:
-                        try:
-                            loop.run_until_complete(
-                                asyncio.gather(*tasks, return_exceptions=True)
-                            )
-                        except Exception:
-                            # Tasks didn't cancel cleanly, but that's okay
-                            pass
+                        with suppress(Exception):
+                            loop.run_until_complete(asyncio.gather(*tasks, return_exceptions=True))
 
                     # Shutdown async generators
                     try:
@@ -105,10 +97,8 @@ class TerminalManager:
                         logger.debug(f"Error shutting down async generators: {e}")
 
                     # Close the loop
-                    try:
+                    with suppress(Exception):
                         loop.close()
-                    except Exception:
-                        pass
                 except Exception as e:
                     logger.debug(f"Error during task cleanup: {e}")
 
@@ -119,12 +109,13 @@ class TerminalManager:
     def get_size() -> tuple[int, int]:
         """
         Get terminal size.
-        
+
         Returns:
             Tuple of (columns, rows)
         """
         try:
             import shutil
+
             return shutil.get_terminal_size()
         except Exception:
             return (80, 24)  # Default fallback
@@ -138,7 +129,7 @@ class TerminalManager:
     def set_title(title: str) -> None:
         """
         Set terminal window title.
-        
+
         Args:
             title: New terminal title
         """
@@ -154,49 +145,49 @@ class TerminalManager:
     def hide_cursor() -> None:
         """Hide the terminal cursor."""
         if sys.platform != "win32":
-            sys.stdout.write('\033[?25l')
+            sys.stdout.write("\033[?25l")
             sys.stdout.flush()
 
     @staticmethod
     def show_cursor() -> None:
         """Show the terminal cursor."""
         if sys.platform != "win32":
-            sys.stdout.write('\033[?25h')
+            sys.stdout.write("\033[?25h")
             sys.stdout.flush()
 
     @staticmethod
     def save_cursor_position() -> None:
         """Save current cursor position."""
         if sys.platform != "win32":
-            sys.stdout.write('\033[s')
+            sys.stdout.write("\033[s")
             sys.stdout.flush()
 
     @staticmethod
     def restore_cursor_position() -> None:
         """Restore saved cursor position."""
         if sys.platform != "win32":
-            sys.stdout.write('\033[u')
+            sys.stdout.write("\033[u")
             sys.stdout.flush()
 
     @staticmethod
     def move_cursor_up(lines: int = 1) -> None:
         """Move cursor up by n lines."""
         if sys.platform != "win32":
-            sys.stdout.write(f'\033[{lines}A')
+            sys.stdout.write(f"\033[{lines}A")
             sys.stdout.flush()
 
     @staticmethod
     def move_cursor_down(lines: int = 1) -> None:
         """Move cursor down by n lines."""
         if sys.platform != "win32":
-            sys.stdout.write(f'\033[{lines}B')
+            sys.stdout.write(f"\033[{lines}B")
             sys.stdout.flush()
 
     @staticmethod
     def clear_line() -> None:
         """Clear current line."""
         if sys.platform != "win32":
-            sys.stdout.write('\033[2K\r')
+            sys.stdout.write("\033[2K\r")
             sys.stdout.flush()
 
     # ─────────────────────────── Alternate Screen ───────────────────────
@@ -208,7 +199,7 @@ class TerminalManager:
         Useful for full-screen applications.
         """
         if sys.platform != "win32":
-            sys.stdout.write('\033[?1049h')
+            sys.stdout.write("\033[?1049h")
             sys.stdout.flush()
 
     @staticmethod
@@ -218,7 +209,7 @@ class TerminalManager:
         Restores previous screen content.
         """
         if sys.platform != "win32":
-            sys.stdout.write('\033[?1049l')
+            sys.stdout.write("\033[?1049l")
             sys.stdout.flush()
 
     @staticmethod
@@ -226,7 +217,7 @@ class TerminalManager:
     def alternate_screen():
         """
         Context manager for alternate screen.
-        
+
         Usage:
             with TerminalManager.alternate_screen():
                 # Your full-screen app here
@@ -245,7 +236,7 @@ class TerminalManager:
     @staticmethod
     def bell() -> None:
         """Sound the terminal bell/beep."""
-        sys.stdout.write('\a')
+        sys.stdout.write("\a")
         sys.stdout.flush()
 
     # ─────────────────────────── Hyperlinks ─────────────────────────────
@@ -254,13 +245,13 @@ class TerminalManager:
     def hyperlink(url: str, text: str | None = None) -> str:
         """
         Create a clickable hyperlink (OSC 8).
-        
+
         Supported in modern terminals like iTerm2, Kitty, etc.
-        
+
         Args:
             url: The URL to link to
             text: Display text (defaults to URL)
-            
+
         Returns:
             Formatted hyperlink string
         """
@@ -268,10 +259,10 @@ class TerminalManager:
             text = url
 
         # Check if terminal likely supports hyperlinks
-        term_program = os.environ.get('TERM_PROGRAM', '')
-        if term_program in ('iTerm.app', 'Hyper', 'kitty', 'WezTerm'):
+        term_program = os.environ.get("TERM_PROGRAM", "")
+        if term_program in ("iTerm.app", "Hyper", "kitty", "WezTerm"):
             # OSC 8 hyperlink format
-            return f'\033]8;;{url}\033\\{text}\033]8;;\033\\'
+            return f"\033]8;;{url}\033\\{text}\033]8;;\033\\"
         else:
             # Fallback to plain text
             return f"{text} ({url})" if text != url else url
@@ -286,77 +277,77 @@ class TerminalManager:
     @staticmethod
     def supports_truecolor() -> bool:
         """Check if terminal supports true color (24-bit RGB)."""
-        return os.environ.get('COLORTERM') == 'truecolor'
+        return os.environ.get("COLORTERM") == "truecolor"
 
     @staticmethod
     def supports_256_colors() -> bool:
         """Check if terminal supports 256 colors."""
-        term = os.environ.get('TERM', '')
-        return '256color' in term or TerminalManager.supports_truecolor()
+        term = os.environ.get("TERM", "")
+        return "256color" in term or TerminalManager.supports_truecolor()
 
     @staticmethod
     def get_color_level() -> str:
         """
         Get the color support level.
-        
+
         Returns:
             'truecolor', '256', '16', or 'mono'
         """
         if not TerminalManager.supports_color():
-            return 'mono'
+            return "mono"
         elif TerminalManager.supports_truecolor():
-            return 'truecolor'
+            return "truecolor"
         elif TerminalManager.supports_256_colors():
-            return '256'
+            return "256"
         else:
-            return '16'
+            return "16"
 
     # ─────────────────────────── Terminal Info ──────────────────────────
 
     @staticmethod
     def get_terminal_program() -> str:
         """Get the terminal program name."""
-        return os.environ.get('TERM_PROGRAM', 'unknown')
+        return os.environ.get("TERM_PROGRAM", "unknown")
 
     @staticmethod
     def is_tmux() -> bool:
         """Check if running inside tmux."""
-        return 'TMUX' in os.environ
+        return "TMUX" in os.environ
 
     @staticmethod
     def is_screen() -> bool:
         """Check if running inside GNU screen."""
-        return 'STY' in os.environ
+        return "STY" in os.environ
 
     @staticmethod
     def is_ssh() -> bool:
         """Check if running over SSH."""
-        return 'SSH_CLIENT' in os.environ or 'SSH_TTY' in os.environ
+        return "SSH_CLIENT" in os.environ or "SSH_TTY" in os.environ
 
     @staticmethod
     def get_terminal_info() -> dict:
         """
         Get comprehensive terminal information.
-        
+
         Returns:
             Dictionary with terminal details
         """
         cols, rows = TerminalManager.get_size()
 
         return {
-            'program': TerminalManager.get_terminal_program(),
-            'type': os.environ.get('TERM', 'unknown'),
-            'size': {'columns': cols, 'rows': rows},
-            'color_level': TerminalManager.get_color_level(),
-            'supports_color': TerminalManager.supports_color(),
-            'supports_256_colors': TerminalManager.supports_256_colors(),
-            'supports_truecolor': TerminalManager.supports_truecolor(),
-            'encoding': sys.stdout.encoding,
-            'is_tty': sys.stdout.isatty(),
-            'is_tmux': TerminalManager.is_tmux(),
-            'is_screen': TerminalManager.is_screen(),
-            'is_ssh': TerminalManager.is_ssh(),
-            'platform': sys.platform,
+            "program": TerminalManager.get_terminal_program(),
+            "type": os.environ.get("TERM", "unknown"),
+            "size": {"columns": cols, "rows": rows},
+            "color_level": TerminalManager.get_color_level(),
+            "supports_color": TerminalManager.supports_color(),
+            "supports_256_colors": TerminalManager.supports_256_colors(),
+            "supports_truecolor": TerminalManager.supports_truecolor(),
+            "encoding": sys.stdout.encoding,
+            "is_tty": sys.stdout.isatty(),
+            "is_tmux": TerminalManager.is_tmux(),
+            "is_screen": TerminalManager.is_screen(),
+            "is_ssh": TerminalManager.is_ssh(),
+            "platform": sys.platform,
         }
 
     # ─────────────────────────── Progress in Title ──────────────────────
@@ -365,7 +356,7 @@ class TerminalManager:
     def set_title_progress(percent: int, prefix: str = "Progress") -> None:
         """
         Show progress in terminal title.
-        
+
         Args:
             percent: Progress percentage (0-100)
             prefix: Text prefix for the title
@@ -376,7 +367,7 @@ class TerminalManager:
         # Create progress bar for title
         bar_length = 10
         filled = int(bar_length * percent / 100)
-        bar = '█' * filled + '░' * (bar_length - filled)
+        bar = "█" * filled + "░" * (bar_length - filled)
 
         title = f"{prefix}: [{bar}] {percent}%"
         TerminalManager.set_title(title)

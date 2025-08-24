@@ -106,7 +106,6 @@ __all__ = [
     "command",
     "clear",
     "rule",
-
     # Terminal
     "TerminalManager",
     "clear_screen",
@@ -114,7 +113,6 @@ __all__ = [
     "reset_terminal",
     "get_terminal_size",
     "set_terminal_title",
-
     # Banners
     "display_chat_banner",
     "display_interactive_banner",
@@ -123,7 +121,6 @@ __all__ = [
     "display_error_banner",
     "display_success_banner",
     "display_welcome_banner",
-
     # Prompts
     "ask",
     "confirm",
@@ -133,7 +130,6 @@ __all__ = [
     "prompt_for_tool_confirmation",
     "prompt_for_retry",
     "create_menu",
-
     # Formatters
     "format_tool_call",
     "format_tool_result",
@@ -143,7 +139,6 @@ __all__ = [
     "format_tree",
     "format_timestamp",
     "format_diff",
-
     # Code display
     "display_code",
     "display_diff",

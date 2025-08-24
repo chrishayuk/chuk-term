@@ -17,12 +17,14 @@ def cli_runner():
 def temp_config_file(tmp_path):
     """Create a temporary configuration file."""
     config_file = tmp_path / "config.yaml"
-    config_file.write_text("""
+    config_file.write_text(
+        """
 terminal:
   width: 80
   height: 24
   color_scheme: "default"
-""")
+"""
+    )
     return config_file
 
 

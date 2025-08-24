@@ -1,5 +1,7 @@
 """Unit tests for user prompt and interaction utilities."""
 
+# ruff: noqa: ARG002
+
 import sys
 from unittest.mock import Mock, patch
 
@@ -36,121 +38,120 @@ class TestPromptStyle:
 class TestGetKey:
     """Test _get_key function for keyboard input."""
 
-    @patch('sys.platform', 'win32')
+    @patch("sys.platform", "win32")
     def test_get_key_windows_normal(self):
         """Test getting normal key on Windows."""
         # Mock msvcrt inside sys.modules
         mock_msvcrt = Mock()
-        mock_msvcrt.getch.return_value = b'a'
+        mock_msvcrt.getch.return_value = b"a"
 
-        with patch.dict('sys.modules', {'msvcrt': mock_msvcrt}):
-            assert _get_key() == 'a'
+        with patch.dict("sys.modules", {"msvcrt": mock_msvcrt}):
+            assert _get_key() == "a"
             mock_msvcrt.getch.assert_called_once()
 
-    @patch('sys.platform', 'win32')
+    @patch("sys.platform", "win32")
     def test_get_key_windows_enter(self):
         """Test getting Enter key on Windows."""
         mock_msvcrt = Mock()
-        mock_msvcrt.getch.return_value = b'\r'
+        mock_msvcrt.getch.return_value = b"\r"
 
-        with patch.dict('sys.modules', {'msvcrt': mock_msvcrt}):
-            assert _get_key() == 'enter'
+        with patch.dict("sys.modules", {"msvcrt": mock_msvcrt}):
+            assert _get_key() == "enter"
 
-    @patch('sys.platform', 'win32')
+    @patch("sys.platform", "win32")
     def test_get_key_windows_space(self):
         """Test getting Space key on Windows."""
         mock_msvcrt = Mock()
-        mock_msvcrt.getch.return_value = b' '
+        mock_msvcrt.getch.return_value = b" "
 
-        with patch.dict('sys.modules', {'msvcrt': mock_msvcrt}):
-            assert _get_key() == 'space'
+        with patch.dict("sys.modules", {"msvcrt": mock_msvcrt}):
+            assert _get_key() == "space"
 
-    @patch('sys.platform', 'win32')
+    @patch("sys.platform", "win32")
     def test_get_key_windows_special(self):
         """Test getting arrow keys on Windows."""
         mock_msvcrt = Mock()
-        mock_msvcrt.getch.side_effect = [b'\xe0', b'H']  # Up arrow
+        mock_msvcrt.getch.side_effect = [b"\xe0", b"H"]  # Up arrow
 
-        with patch.dict('sys.modules', {'msvcrt': mock_msvcrt}):
-            assert _get_key() == 'up'
+        with patch.dict("sys.modules", {"msvcrt": mock_msvcrt}):
+            assert _get_key() == "up"
 
-        mock_msvcrt.getch.side_effect = [b'\xe0', b'P']  # Down arrow
-        with patch.dict('sys.modules', {'msvcrt': mock_msvcrt}):
-            assert _get_key() == 'down'
+        mock_msvcrt.getch.side_effect = [b"\xe0", b"P"]  # Down arrow
+        with patch.dict("sys.modules", {"msvcrt": mock_msvcrt}):
+            assert _get_key() == "down"
 
-    @patch('sys.platform', 'win32')
+    @patch("sys.platform", "win32")
     def test_get_key_windows_ctrl_c(self):
         """Test Ctrl+C on Windows."""
         mock_msvcrt = Mock()
-        mock_msvcrt.getch.return_value = b'\x03'
+        mock_msvcrt.getch.return_value = b"\x03"
 
-        with patch.dict('sys.modules', {'msvcrt': mock_msvcrt}):
-            with pytest.raises(KeyboardInterrupt):
-                _get_key()
+        with patch.dict("sys.modules", {"msvcrt": mock_msvcrt}), pytest.raises(KeyboardInterrupt):
+            _get_key()
 
-    @patch('sys.platform', 'linux')
-    @patch('sys.stdin')
-    @patch('termios.tcsetattr')
-    @patch('termios.tcgetattr')
-    @patch('tty.setraw')
+    @patch("sys.platform", "linux")
+    @patch("sys.stdin")
+    @patch("termios.tcsetattr")
+    @patch("termios.tcgetattr")
+    @patch("tty.setraw")
     def test_get_key_unix_normal(self, mock_setraw, mock_tcgetattr, mock_tcsetattr, mock_stdin):
         """Test getting normal key on Unix."""
         mock_stdin.fileno.return_value = 0
-        mock_stdin.read.return_value = 'a'
+        mock_stdin.read.return_value = "a"
         mock_tcgetattr.return_value = []
 
-        assert _get_key() == 'a'
+        assert _get_key() == "a"
         mock_setraw.assert_called_once()
 
-    @patch('sys.platform', 'linux')
-    @patch('sys.stdin')
-    @patch('termios.tcsetattr')
-    @patch('termios.tcgetattr')
-    @patch('tty.setraw')
+    @patch("sys.platform", "linux")
+    @patch("sys.stdin")
+    @patch("termios.tcsetattr")
+    @patch("termios.tcgetattr")
+    @patch("tty.setraw")
     def test_get_key_unix_arrow(self, mock_setraw, mock_tcgetattr, mock_tcsetattr, mock_stdin):
         """Test getting arrow keys on Unix."""
         mock_stdin.fileno.return_value = 0
-        mock_stdin.read.side_effect = ['\x1b', '[', 'A']  # Up arrow
+        mock_stdin.read.side_effect = ["\x1b", "[", "A"]  # Up arrow
         mock_tcgetattr.return_value = []
 
-        assert _get_key() == 'up'
+        assert _get_key() == "up"
 
-    @patch('sys.platform', 'linux')
-    @patch('sys.stdin')
-    @patch('termios.tcsetattr')
-    @patch('termios.tcgetattr')
-    @patch('tty.setraw')
+    @patch("sys.platform", "linux")
+    @patch("sys.stdin")
+    @patch("termios.tcsetattr")
+    @patch("termios.tcgetattr")
+    @patch("tty.setraw")
     def test_get_key_unix_enter(self, mock_setraw, mock_tcgetattr, mock_tcsetattr, mock_stdin):
         """Test getting Enter key on Unix."""
         mock_stdin.fileno.return_value = 0
-        mock_stdin.read.return_value = '\n'
+        mock_stdin.read.return_value = "\n"
         mock_tcgetattr.return_value = []
 
-        assert _get_key() == 'enter'
+        assert _get_key() == "enter"
 
-    @patch('sys.platform', 'linux')
-    @patch('sys.stdin')
-    @patch('termios.tcsetattr')
-    @patch('termios.tcgetattr')
-    @patch('tty.setraw')
+    @patch("sys.platform", "linux")
+    @patch("sys.stdin")
+    @patch("termios.tcsetattr")
+    @patch("termios.tcgetattr")
+    @patch("tty.setraw")
     def test_get_key_unix_ctrl_c(self, mock_setraw, mock_tcgetattr, mock_tcsetattr, mock_stdin):
         """Test Ctrl+C on Unix."""
         mock_stdin.fileno.return_value = 0
-        mock_stdin.read.return_value = '\x03'
+        mock_stdin.read.return_value = "\x03"
         mock_tcgetattr.return_value = []
 
         with pytest.raises(KeyboardInterrupt):
             _get_key()
 
-    @patch('sys.platform', 'linux')
-    @patch('sys.stdin')
-    @patch('termios.tcsetattr')
-    @patch('termios.tcgetattr')
-    @patch('tty.setraw')
+    @patch("sys.platform", "linux")
+    @patch("sys.stdin")
+    @patch("termios.tcsetattr")
+    @patch("termios.tcgetattr")
+    @patch("tty.setraw")
     def test_get_key_unix_ctrl_d(self, mock_setraw, mock_tcgetattr, mock_tcsetattr, mock_stdin):
         """Test Ctrl+D on Unix."""
         mock_stdin.fileno.return_value = 0
-        mock_stdin.read.return_value = '\x04'
+        mock_stdin.read.return_value = "\x04"
         mock_tcgetattr.return_value = []
 
         with pytest.raises(EOFError):
@@ -160,16 +161,16 @@ class TestGetKey:
 class TestAsk:
     """Test ask function for text input."""
 
-    @patch('chuk_term.ui.prompts.get_theme')
-    @patch('chuk_term.ui.prompts.ui')
-    @patch('chuk_term.ui.prompts.Prompt')
+    @patch("chuk_term.ui.prompts.get_theme")
+    @patch("chuk_term.ui.prompts.ui")
+    @patch("chuk_term.ui.prompts.Prompt")
     def test_ask_basic(self, mock_prompt_class, mock_ui, mock_get_theme):
         """Test basic text input."""
         mock_theme = Mock()
         mock_theme.name = "default"
         mock_get_theme.return_value = mock_theme
 
-        mock_prompt = Mock()
+        Mock()
         mock_prompt_class.ask.return_value = "user input"
         mock_console = Mock()
         mock_ui.get_raw_console.return_value = mock_console
@@ -180,9 +181,9 @@ class TestAsk:
         mock_prompt_class.ask.assert_called_once()
         assert "[bold cyan]Enter text:[/]" in str(mock_prompt_class.ask.call_args)
 
-    @patch('chuk_term.ui.prompts.get_theme')
-    @patch('chuk_term.ui.prompts.ui')
-    @patch('chuk_term.ui.prompts.Prompt')
+    @patch("chuk_term.ui.prompts.get_theme")
+    @patch("chuk_term.ui.prompts.ui")
+    @patch("chuk_term.ui.prompts.Prompt")
     def test_ask_minimal_theme(self, mock_prompt_class, mock_ui, mock_get_theme):
         """Test text input with minimal theme."""
         mock_theme = Mock()
@@ -200,9 +201,9 @@ class TestAsk:
         call_args = mock_prompt_class.ask.call_args
         assert call_args[0][0] == "Enter text:"  # No styling
 
-    @patch('chuk_term.ui.prompts.get_theme')
-    @patch('chuk_term.ui.prompts.ui')
-    @patch('chuk_term.ui.prompts.Prompt')
+    @patch("chuk_term.ui.prompts.get_theme")
+    @patch("chuk_term.ui.prompts.ui")
+    @patch("chuk_term.ui.prompts.Prompt")
     def test_ask_with_default(self, mock_prompt_class, mock_ui, mock_get_theme):
         """Test text input with default value."""
         mock_theme = Mock()
@@ -217,9 +218,9 @@ class TestAsk:
 
         assert result == "default value"
 
-    @patch('chuk_term.ui.prompts.get_theme')
-    @patch('chuk_term.ui.prompts.ui')
-    @patch('chuk_term.ui.prompts.Prompt')
+    @patch("chuk_term.ui.prompts.get_theme")
+    @patch("chuk_term.ui.prompts.ui")
+    @patch("chuk_term.ui.prompts.Prompt")
     def test_ask_password(self, mock_prompt_class, mock_ui, mock_get_theme):
         """Test password input."""
         mock_theme = Mock()
@@ -234,11 +235,11 @@ class TestAsk:
 
         assert result == "secret"
         call_kwargs = mock_prompt_class.ask.call_args[1]
-        assert call_kwargs['password'] is True
+        assert call_kwargs["password"] is True
 
-    @patch('chuk_term.ui.prompts.get_theme')
-    @patch('chuk_term.ui.prompts.ui')
-    @patch('chuk_term.ui.prompts.Prompt')
+    @patch("chuk_term.ui.prompts.get_theme")
+    @patch("chuk_term.ui.prompts.ui")
+    @patch("chuk_term.ui.prompts.Prompt")
     def test_ask_keyboard_interrupt(self, mock_prompt_class, mock_ui, mock_get_theme):
         """Test handling Ctrl+C during input."""
         mock_theme = Mock()
@@ -260,9 +261,9 @@ class TestAsk:
 class TestConfirm:
     """Test confirm function for yes/no prompts."""
 
-    @patch('chuk_term.ui.prompts.get_theme')
-    @patch('chuk_term.ui.prompts.ui')
-    @patch('chuk_term.ui.prompts.Confirm')
+    @patch("chuk_term.ui.prompts.get_theme")
+    @patch("chuk_term.ui.prompts.ui")
+    @patch("chuk_term.ui.prompts.Confirm")
     def test_confirm_yes(self, mock_confirm_class, mock_ui, mock_get_theme):
         """Test confirmation with yes."""
         mock_theme = Mock()
@@ -278,9 +279,9 @@ class TestConfirm:
         assert result is True
         mock_confirm_class.ask.assert_called_once()
 
-    @patch('chuk_term.ui.prompts.get_theme')
-    @patch('chuk_term.ui.prompts.ui')
-    @patch('chuk_term.ui.prompts.Confirm')
+    @patch("chuk_term.ui.prompts.get_theme")
+    @patch("chuk_term.ui.prompts.ui")
+    @patch("chuk_term.ui.prompts.Confirm")
     def test_confirm_no(self, mock_confirm_class, mock_ui, mock_get_theme):
         """Test confirmation with no."""
         mock_theme = Mock()
@@ -295,9 +296,9 @@ class TestConfirm:
 
         assert result is False
 
-    @patch('chuk_term.ui.prompts.get_theme')
-    @patch('chuk_term.ui.prompts.ui')
-    @patch('chuk_term.ui.prompts.Confirm')
+    @patch("chuk_term.ui.prompts.get_theme")
+    @patch("chuk_term.ui.prompts.ui")
+    @patch("chuk_term.ui.prompts.Confirm")
     def test_confirm_interrupt(self, mock_confirm_class, mock_ui, mock_get_theme):
         """Test handling interrupt during confirmation."""
         mock_theme = Mock()
@@ -315,9 +316,9 @@ class TestConfirm:
 class TestAskNumber:
     """Test ask_number function for numeric input."""
 
-    @patch('chuk_term.ui.prompts.get_theme')
-    @patch('chuk_term.ui.prompts.ui')
-    @patch('chuk_term.ui.prompts.FloatPrompt')
+    @patch("chuk_term.ui.prompts.get_theme")
+    @patch("chuk_term.ui.prompts.ui")
+    @patch("chuk_term.ui.prompts.FloatPrompt")
     def test_ask_number_float(self, mock_float_prompt, mock_ui, mock_get_theme):
         """Test float number input."""
         mock_theme = Mock()
@@ -333,9 +334,9 @@ class TestAskNumber:
         assert result == 3.14
         mock_float_prompt.ask.assert_called_once()
 
-    @patch('chuk_term.ui.prompts.get_theme')
-    @patch('chuk_term.ui.prompts.ui')
-    @patch('chuk_term.ui.prompts.IntPrompt')
+    @patch("chuk_term.ui.prompts.get_theme")
+    @patch("chuk_term.ui.prompts.ui")
+    @patch("chuk_term.ui.prompts.IntPrompt")
     def test_ask_number_integer(self, mock_int_prompt, mock_ui, mock_get_theme):
         """Test integer number input."""
         mock_theme = Mock()
@@ -351,9 +352,9 @@ class TestAskNumber:
         assert result == 42
         mock_int_prompt.ask.assert_called_once()
 
-    @patch('chuk_term.ui.prompts.get_theme')
-    @patch('chuk_term.ui.prompts.ui')
-    @patch('chuk_term.ui.prompts.FloatPrompt')
+    @patch("chuk_term.ui.prompts.get_theme")
+    @patch("chuk_term.ui.prompts.ui")
+    @patch("chuk_term.ui.prompts.FloatPrompt")
     def test_ask_number_with_range(self, mock_float_prompt, mock_ui, mock_get_theme):
         """Test number input with min/max validation."""
         mock_theme = Mock()
@@ -381,9 +382,9 @@ class TestSelectFromList:
         with pytest.raises(ValueError, match="No choices provided"):
             select_from_list("Choose:", [])
 
-    @patch('chuk_term.ui.prompts.ask')
-    @patch('chuk_term.ui.prompts.ui')
-    @patch('chuk_term.ui.prompts.get_theme')
+    @patch("chuk_term.ui.prompts.ask")
+    @patch("chuk_term.ui.prompts.ui")
+    @patch("chuk_term.ui.prompts.get_theme")
     def test_select_manual_numeric(self, mock_get_theme, mock_ui, mock_ask):
         """Test manual selection with number."""
         mock_theme = Mock()
@@ -399,9 +400,9 @@ class TestSelectFromList:
         calls = [str(call) for call in mock_ui.print.call_args_list]
         assert any("Option B" in call and "[2]" in call for call in calls)
 
-    @patch('chuk_term.ui.prompts.ask')
-    @patch('chuk_term.ui.prompts.ui')
-    @patch('chuk_term.ui.prompts.get_theme')
+    @patch("chuk_term.ui.prompts.ask")
+    @patch("chuk_term.ui.prompts.ui")
+    @patch("chuk_term.ui.prompts.get_theme")
     def test_select_manual_by_name(self, mock_get_theme, mock_ui, mock_ask):
         """Test manual selection by entering choice name."""
         mock_theme = Mock()
@@ -414,9 +415,9 @@ class TestSelectFromList:
 
         assert result == "Option C"
 
-    @patch('chuk_term.ui.prompts.ask')
-    @patch('chuk_term.ui.prompts.ui')
-    @patch('chuk_term.ui.prompts.get_theme')
+    @patch("chuk_term.ui.prompts.ask")
+    @patch("chuk_term.ui.prompts.ui")
+    @patch("chuk_term.ui.prompts.get_theme")
     def test_select_with_default(self, mock_get_theme, mock_ui, mock_ask):
         """Test selection with default value."""
         mock_theme = Mock()
@@ -425,19 +426,15 @@ class TestSelectFromList:
 
         mock_ask.return_value = ""  # User presses Enter
 
-        result = select_from_list(
-            "Choose:",
-            ["Option A", "Option B", "Option C"],
-            default="Option B"
-        )
+        result = select_from_list("Choose:", ["Option A", "Option B", "Option C"], default="Option B")
 
         assert result == "Option B"
         # Check that default is marked
         mock_ui.print.assert_any_call("  → [2] Option B")
 
-    @patch('chuk_term.ui.prompts.ask')
-    @patch('chuk_term.ui.prompts.ui')
-    @patch('chuk_term.ui.prompts.get_theme')
+    @patch("chuk_term.ui.prompts.ask")
+    @patch("chuk_term.ui.prompts.ui")
+    @patch("chuk_term.ui.prompts.get_theme")
     def test_select_allow_custom(self, mock_get_theme, mock_ui, mock_ask):
         """Test selection with custom input allowed."""
         mock_theme = Mock()
@@ -446,11 +443,7 @@ class TestSelectFromList:
 
         mock_ask.return_value = "Custom Value"
 
-        result = select_from_list(
-            "Choose:",
-            ["Option A", "Option B"],
-            allow_custom=True
-        )
+        result = select_from_list("Choose:", ["Option A", "Option B"], allow_custom=True)
 
         assert result == "Custom Value"
 
@@ -463,9 +456,9 @@ class TestSelectMultiple:
         with pytest.raises(ValueError, match="No choices provided"):
             select_multiple("Choose:", [])
 
-    @patch('chuk_term.ui.prompts.ask')
-    @patch('chuk_term.ui.prompts.ui')
-    @patch('chuk_term.ui.prompts.get_theme')
+    @patch("chuk_term.ui.prompts.ask")
+    @patch("chuk_term.ui.prompts.ui")
+    @patch("chuk_term.ui.prompts.get_theme")
     def test_select_multiple_basic(self, mock_get_theme, mock_ui, mock_ask):
         """Test basic multiple selection."""
         mock_theme = Mock()
@@ -479,9 +472,9 @@ class TestSelectMultiple:
 
         assert set(result) == {"A", "C"}
 
-    @patch('chuk_term.ui.prompts.ask')
-    @patch('chuk_term.ui.prompts.ui')
-    @patch('chuk_term.ui.prompts.get_theme')
+    @patch("chuk_term.ui.prompts.ask")
+    @patch("chuk_term.ui.prompts.ui")
+    @patch("chuk_term.ui.prompts.get_theme")
     def test_select_multiple_with_range(self, mock_get_theme, mock_ui, mock_ask):
         """Test multiple selection with range."""
         mock_theme = Mock()
@@ -495,9 +488,9 @@ class TestSelectMultiple:
 
         assert set(result) == {"A", "B", "C"}
 
-    @patch('chuk_term.ui.prompts.ask')
-    @patch('chuk_term.ui.prompts.ui')
-    @patch('chuk_term.ui.prompts.get_theme')
+    @patch("chuk_term.ui.prompts.ask")
+    @patch("chuk_term.ui.prompts.ui")
+    @patch("chuk_term.ui.prompts.get_theme")
     def test_select_multiple_all_none(self, mock_get_theme, mock_ui, mock_ask):
         """Test select all and none commands."""
         mock_theme = Mock()
@@ -511,9 +504,9 @@ class TestSelectMultiple:
 
         assert result == ["B"]  # Only item 2 selected after all/none/2
 
-    @patch('chuk_term.ui.prompts.ask')
-    @patch('chuk_term.ui.prompts.ui')
-    @patch('chuk_term.ui.prompts.get_theme')
+    @patch("chuk_term.ui.prompts.ask")
+    @patch("chuk_term.ui.prompts.ui")
+    @patch("chuk_term.ui.prompts.get_theme")
     def test_select_multiple_min_max(self, mock_get_theme, mock_ui, mock_ask):
         """Test selection with min/max constraints."""
         mock_theme = Mock()
@@ -524,12 +517,7 @@ class TestSelectMultiple:
         # Need more ask calls for the selection loop
         mock_ask.side_effect = ["1", "", "2", ""]
 
-        result = select_multiple(
-            "Choose:",
-            ["A", "B", "C", "D"],
-            min_selections=2,
-            max_selections=3
-        )
+        result = select_multiple("Choose:", ["A", "B", "C", "D"], min_selections=2, max_selections=3)
 
         assert set(result) == {"A", "B"}
         mock_ui.warning.assert_called_with("Please select at least 2 items")
@@ -538,9 +526,9 @@ class TestSelectMultiple:
 class TestPromptForToolConfirmation:
     """Test prompt_for_tool_confirmation function."""
 
-    @patch('chuk_term.ui.prompts.confirm')
-    @patch('chuk_term.ui.prompts.ui')
-    @patch('chuk_term.ui.prompts.get_theme')
+    @patch("chuk_term.ui.prompts.confirm")
+    @patch("chuk_term.ui.prompts.ui")
+    @patch("chuk_term.ui.prompts.get_theme")
     def test_tool_confirmation_approved(self, mock_get_theme, mock_ui, mock_confirm):
         """Test tool confirmation approved."""
         mock_theme = Mock()
@@ -549,20 +537,16 @@ class TestPromptForToolConfirmation:
 
         mock_confirm.return_value = True
 
-        result = prompt_for_tool_confirmation(
-            "test_tool",
-            {"arg1": "value1", "arg2": 42},
-            "A test tool"
-        )
+        result = prompt_for_tool_confirmation("test_tool", {"arg1": "value1", "arg2": 42}, "A test tool")
 
         assert result is True
         mock_ui.print.assert_any_call("Tool: [cyan]test_tool[/cyan]")
         mock_ui.print.assert_any_call("Description: A test tool")
         mock_confirm.assert_called_once()
 
-    @patch('chuk_term.ui.prompts.confirm')
-    @patch('chuk_term.ui.prompts.ui')
-    @patch('chuk_term.ui.prompts.get_theme')
+    @patch("chuk_term.ui.prompts.confirm")
+    @patch("chuk_term.ui.prompts.ui")
+    @patch("chuk_term.ui.prompts.get_theme")
     def test_tool_confirmation_minimal(self, mock_get_theme, mock_ui, mock_confirm):
         """Test tool confirmation with minimal theme."""
         mock_theme = Mock()
@@ -581,8 +565,8 @@ class TestPromptForToolConfirmation:
 class TestPromptForRetry:
     """Test prompt_for_retry function."""
 
-    @patch('chuk_term.ui.prompts.confirm')
-    @patch('chuk_term.ui.prompts.ui')
+    @patch("chuk_term.ui.prompts.confirm")
+    @patch("chuk_term.ui.prompts.ui")
     def test_retry_with_attempts_left(self, mock_ui, mock_confirm):
         """Test retry prompt with attempts remaining."""
         mock_confirm.return_value = True
@@ -592,14 +576,10 @@ class TestPromptForRetry:
 
         assert result is True
         mock_ui.error.assert_called_with("Attempt 2/5 failed: Connection failed")
-        mock_confirm.assert_called_with(
-            "Retry? (3 attempts remaining)",
-            default=True,
-            style=PromptStyle.WARNING
-        )
+        mock_confirm.assert_called_with("Retry? (3 attempts remaining)", default=True, style=PromptStyle.WARNING)
 
-    @patch('chuk_term.ui.prompts.confirm')
-    @patch('chuk_term.ui.prompts.ui')
+    @patch("chuk_term.ui.prompts.confirm")
+    @patch("chuk_term.ui.prompts.ui")
     def test_retry_max_attempts_reached(self, mock_ui, mock_confirm):
         """Test retry prompt when max attempts reached."""
         error = Exception("Connection failed")
@@ -613,9 +593,9 @@ class TestPromptForRetry:
 class TestCreateMenu:
     """Test create_menu function."""
 
-    @patch('chuk_term.ui.prompts.ask')
-    @patch('chuk_term.ui.prompts.ui')
-    @patch('chuk_term.ui.prompts.get_theme')
+    @patch("chuk_term.ui.prompts.ask")
+    @patch("chuk_term.ui.prompts.ui")
+    @patch("chuk_term.ui.prompts.get_theme")
     def test_create_menu_basic(self, mock_get_theme, mock_ui, mock_ask):
         """Test basic menu creation."""
         mock_theme = Mock()
@@ -624,10 +604,7 @@ class TestCreateMenu:
 
         mock_ask.return_value = "1"
 
-        options = {
-            "option1": "First option",
-            "option2": "Second option"
-        }
+        options = {"option1": "First option", "option2": "Second option"}
 
         result = create_menu("Main Menu", options, back_option=False, quit_option=False)
 
@@ -636,9 +613,9 @@ class TestCreateMenu:
         mock_ui.print.assert_any_call("-" * len("Main Menu"))
         mock_ui.print.assert_any_call("[1] option1 - First option")
 
-    @patch('chuk_term.ui.prompts.ask')
-    @patch('chuk_term.ui.prompts.ui')
-    @patch('chuk_term.ui.prompts.get_theme')
+    @patch("chuk_term.ui.prompts.ask")
+    @patch("chuk_term.ui.prompts.ui")
+    @patch("chuk_term.ui.prompts.get_theme")
     def test_create_menu_with_back_quit(self, mock_get_theme, mock_ui, mock_ask):
         """Test menu with back and quit options."""
         mock_theme = Mock()
@@ -655,8 +632,8 @@ class TestCreateMenu:
         mock_ui.print.assert_any_call("[2] back - Go back")
         mock_ui.print.assert_any_call("[3] quit - Exit")
 
-    @patch('chuk_term.ui.prompts.ui')
-    @patch('chuk_term.ui.prompts.get_theme')
+    @patch("chuk_term.ui.prompts.ui")
+    @patch("chuk_term.ui.prompts.get_theme")
     def test_create_menu_rich_table(self, mock_get_theme, mock_ui):
         """Test menu creation with rich table for non-minimal theme."""
         mock_theme = Mock()
@@ -664,11 +641,11 @@ class TestCreateMenu:
         mock_get_theme.return_value = mock_theme
 
         # Mock the table
-        with patch('chuk_term.ui.prompts.Table') as mock_table_class:
+        with patch("chuk_term.ui.prompts.Table") as mock_table_class:
             mock_table = Mock()
             mock_table_class.return_value = mock_table
 
-            with patch('chuk_term.ui.prompts.ask') as mock_ask:
+            with patch("chuk_term.ui.prompts.ask") as mock_ask:
                 mock_ask.return_value = "option1"
 
                 options = {"option1": "First option"}
@@ -683,10 +660,10 @@ class TestCreateMenu:
 class TestInteractiveSelect:
     """Test _interactive_select function."""
 
-    @patch('sys.stdout')
-    @patch('chuk_term.ui.prompts._get_key')
-    @patch('chuk_term.ui.prompts.ui')
-    @patch('chuk_term.ui.prompts.get_theme')
+    @patch("sys.stdout")
+    @patch("chuk_term.ui.prompts._get_key")
+    @patch("chuk_term.ui.prompts.ui")
+    @patch("chuk_term.ui.prompts.get_theme")
     def test_interactive_select_arrow_navigation(self, mock_get_theme, mock_ui, mock_get_key, mock_stdout):
         """Test interactive selection with arrow keys."""
         mock_theme = Mock()
@@ -694,7 +671,7 @@ class TestInteractiveSelect:
         mock_get_theme.return_value = mock_theme
 
         # Simulate: down, down, enter
-        mock_get_key.side_effect = ['down', 'down', 'enter']
+        mock_get_key.side_effect = ["down", "down", "enter"]
 
         choices = ["Option A", "Option B", "Option C"]
         result = _interactive_select("Choose:", choices)
@@ -702,10 +679,10 @@ class TestInteractiveSelect:
         assert result == "Option C"
         mock_ui.success.assert_called_with("Selected: Option C")
 
-    @patch('sys.stdout')
-    @patch('chuk_term.ui.prompts._get_key')
-    @patch('chuk_term.ui.prompts.ui')
-    @patch('chuk_term.ui.prompts.get_theme')
+    @patch("sys.stdout")
+    @patch("chuk_term.ui.prompts._get_key")
+    @patch("chuk_term.ui.prompts.ui")
+    @patch("chuk_term.ui.prompts.get_theme")
     def test_interactive_select_number_selection(self, mock_get_theme, mock_ui, mock_get_key, mock_stdout):
         """Test interactive selection with number key."""
         mock_theme = Mock()
@@ -713,24 +690,24 @@ class TestInteractiveSelect:
         mock_get_theme.return_value = mock_theme
 
         # Simulate pressing '2'
-        mock_get_key.return_value = '2'
+        mock_get_key.return_value = "2"
 
         choices = ["Option A", "Option B", "Option C"]
         result = _interactive_select("Choose:", choices)
 
         assert result == "Option B"
 
-    @patch('sys.stdout')
-    @patch('chuk_term.ui.prompts._get_key')
-    @patch('chuk_term.ui.prompts.ui')
-    @patch('chuk_term.ui.prompts.get_theme')
+    @patch("sys.stdout")
+    @patch("chuk_term.ui.prompts._get_key")
+    @patch("chuk_term.ui.prompts.ui")
+    @patch("chuk_term.ui.prompts.get_theme")
     def test_interactive_select_quit(self, mock_get_theme, mock_ui, mock_get_key, mock_stdout):
         """Test quitting interactive selection."""
         mock_theme = Mock()
         mock_theme.name = "default"
         mock_get_theme.return_value = mock_theme
 
-        mock_get_key.return_value = 'q'
+        mock_get_key.return_value = "q"
 
         with pytest.raises(KeyboardInterrupt):
             _interactive_select("Choose:", ["A", "B"])
@@ -739,11 +716,11 @@ class TestInteractiveSelect:
 class TestInteractiveMultiSelect:
     """Test _interactive_multi_select function."""
 
-    @patch('sys.stdout')
-    @patch('time.sleep')  # Mock sleep to speed up tests
-    @patch('chuk_term.ui.prompts._get_key')
-    @patch('chuk_term.ui.prompts.ui')
-    @patch('chuk_term.ui.prompts.get_theme')
+    @patch("sys.stdout")
+    @patch("time.sleep")  # Mock sleep to speed up tests
+    @patch("chuk_term.ui.prompts._get_key")
+    @patch("chuk_term.ui.prompts.ui")
+    @patch("chuk_term.ui.prompts.get_theme")
     def test_interactive_multi_select_basic(self, mock_get_theme, mock_ui, mock_get_key, mock_sleep, mock_stdout):
         """Test basic interactive multi-selection."""
         mock_theme = Mock()
@@ -751,7 +728,7 @@ class TestInteractiveMultiSelect:
         mock_get_theme.return_value = mock_theme
 
         # Simulate: space (select first), down, space (select second), enter
-        mock_get_key.side_effect = ['space', 'down', 'space', 'enter']
+        mock_get_key.side_effect = ["space", "down", "space", "enter"]
 
         choices = ["Option A", "Option B", "Option C"]
         result = _interactive_multi_select("Choose multiple:", choices)
@@ -759,16 +736,16 @@ class TestInteractiveMultiSelect:
         # Check that both options were selected (order doesn't matter)
         assert set(result) == {"Option A", "Option B"}
         # Check that success message was shown with both items
-        success_calls = [call for call in mock_ui.success.call_args_list]
+        success_calls = list(mock_ui.success.call_args_list)
         assert len(success_calls) > 0
         success_msg = str(success_calls[0])
         assert "Option A" in success_msg and "Option B" in success_msg
 
-    @patch('sys.stdout')
-    @patch('time.sleep')
-    @patch('chuk_term.ui.prompts._get_key')
-    @patch('chuk_term.ui.prompts.ui')
-    @patch('chuk_term.ui.prompts.get_theme')
+    @patch("sys.stdout")
+    @patch("time.sleep")
+    @patch("chuk_term.ui.prompts._get_key")
+    @patch("chuk_term.ui.prompts.ui")
+    @patch("chuk_term.ui.prompts.get_theme")
     def test_interactive_multi_select_all_none(self, mock_get_theme, mock_ui, mock_get_key, mock_sleep, mock_stdout):
         """Test select all and none shortcuts."""
         mock_theme = Mock()
@@ -776,7 +753,7 @@ class TestInteractiveMultiSelect:
         mock_get_theme.return_value = mock_theme
 
         # Simulate: 'a' (select all), 'n' (select none), 'enter'
-        mock_get_key.side_effect = ['a', 'n', 'enter']
+        mock_get_key.side_effect = ["a", "n", "enter"]
 
         choices = ["Option A", "Option B"]
         result = _interactive_multi_select("Choose:", choices)
@@ -784,11 +761,11 @@ class TestInteractiveMultiSelect:
         assert result == []  # None selected
         mock_ui.info.assert_called_with("No items selected")
 
-    @patch('sys.stdout')
-    @patch('time.sleep')
-    @patch('chuk_term.ui.prompts._get_key')
-    @patch('chuk_term.ui.prompts.ui')
-    @patch('chuk_term.ui.prompts.get_theme')
+    @patch("sys.stdout")
+    @patch("time.sleep")
+    @patch("chuk_term.ui.prompts._get_key")
+    @patch("chuk_term.ui.prompts.ui")
+    @patch("chuk_term.ui.prompts.get_theme")
     def test_interactive_multi_select_constraints(self, mock_get_theme, mock_ui, mock_get_key, mock_sleep, mock_stdout):
         """Test multi-selection with constraints."""
         mock_theme = Mock()
@@ -796,14 +773,10 @@ class TestInteractiveMultiSelect:
         mock_get_theme.return_value = mock_theme
 
         # Try to confirm with too few, then select enough and confirm
-        mock_get_key.side_effect = ['enter', 'space', 'down', 'space', 'enter']
+        mock_get_key.side_effect = ["enter", "space", "down", "space", "enter"]
 
         choices = ["A", "B", "C"]
-        result = _interactive_multi_select(
-            "Choose:",
-            choices,
-            min_selections=2
-        )
+        result = _interactive_multi_select("Choose:", choices, min_selections=2)
 
         assert len(result) >= 2
         mock_ui.warning.assert_called_with("Please select at least 2 items")
@@ -813,6 +786,6 @@ class TestInteractiveMultiSelect:
 def reset_modules():
     """Reset module state after each test."""
     # Remove msvcrt from sys.modules if it was added during test
-    if 'msvcrt' in sys.modules and sys.platform != 'win32':
-        del sys.modules['msvcrt']
+    if "msvcrt" in sys.modules and sys.platform != "win32":
+        del sys.modules["msvcrt"]
     yield

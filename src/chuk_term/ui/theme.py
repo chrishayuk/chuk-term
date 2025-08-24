@@ -94,7 +94,7 @@ class Theme:
     def __init__(self, name: str = "default"):
         """
         Initialize theme.
-        
+
         Args:
             name: Theme name (default, dark, light, minimal, terminal)
         """
@@ -106,10 +106,10 @@ class Theme:
     def _load_color_scheme(self, name: str) -> ColorScheme:
         """
         Load a color scheme by name.
-        
+
         Args:
             name: Theme name
-            
+
         Returns:
             ColorScheme instance
         """
@@ -127,10 +127,10 @@ class Theme:
     def _load_icons(self, name: str) -> Icons:
         """
         Load icons for a theme.
-        
+
         Args:
             name: Theme name
-            
+
         Returns:
             Icons instance
         """
@@ -142,13 +142,13 @@ class Theme:
     def style(self, *elements: str) -> str:
         """
         Build a Rich style string from theme elements.
-        
+
         Args:
             *elements: Style elements to combine
-            
+
         Returns:
             Rich style string
-            
+
         Example:
             theme.style("error", "emphasis") -> "red bold"
         """
@@ -172,14 +172,14 @@ class Theme:
     def format(self, text: str, *style_elements: str) -> str:
         """
         Format text with theme styles.
-        
+
         Args:
             text: Text to format
             *style_elements: Style elements to apply
-            
+
         Returns:
             Formatted text with Rich markup
-            
+
         Example:
             theme.format("Error!", "error", "emphasis") -> "[red bold]Error![/]"
         """
@@ -205,10 +205,10 @@ class Theme:
     def get_component_style(self, component: str) -> dict[str, str]:
         """
         Get style dictionary for a UI component.
-        
+
         Args:
             component: Component name (panel, table, prompt, etc.)
-            
+
         Returns:
             Style dictionary for the component
         """
@@ -240,7 +240,9 @@ class Theme:
             },
             "tool_call": {
                 "border_style": self.colors.tool,
-                "title": f"{self.icons.tool} Tool Invocation" if (show_icons and self.icons.tool) else "Tool Invocation",
+                "title": (
+                    f"{self.icons.tool} Tool Invocation" if (show_icons and self.icons.tool) else "Tool Invocation"
+                ),
             },
         }
         return styles.get(component, {})
@@ -377,7 +379,7 @@ _theme: Theme | None = None
 def get_theme() -> Theme:
     """
     Get the global theme instance.
-    
+
     Returns:
         Current theme
     """
@@ -390,10 +392,10 @@ def get_theme() -> Theme:
 def set_theme(theme_name: str) -> Theme:
     """
     Set the global theme.
-    
+
     Args:
         theme_name: Name of theme to use
-        
+
     Returns:
         New theme instance
     """
@@ -402,8 +404,9 @@ def set_theme(theme_name: str) -> Theme:
     # Notify output system of theme change if it exists
     try:
         from chuk_term.ui.output import get_output
+
         output = get_output()
-        if hasattr(output, 'set_theme'):
+        if hasattr(output, "set_theme"):
             output.set_theme(_theme)
     except ImportError:
         pass  # Output module not available yet
@@ -413,7 +416,7 @@ def set_theme(theme_name: str) -> Theme:
 def use_theme(theme: Theme) -> None:
     """
     Use a custom theme instance.
-    
+
     Args:
         theme: Theme instance to use
     """
@@ -422,14 +425,16 @@ def use_theme(theme: Theme) -> None:
     # Notify output system of theme change if it exists
     try:
         from chuk_term.ui.output import get_output
+
         output = get_output()
-        if hasattr(output, 'set_theme'):
+        if hasattr(output, "set_theme"):
             output.set_theme(_theme)
     except ImportError:
         pass  # Output module not available yet
 
 
 # ─────────────────────────── Legacy Compatibility ──────────────────────────
+
 
 # Map old color constants to theme access for backward compatibility
 def __getattr__(name: str) -> str:
@@ -466,19 +471,20 @@ def __getattr__(name: str) -> str:
 
 # ─────────────────────────── Convenience Functions ─────────────────────────
 
+
 def apply_theme_to_output(output_instance) -> None:
     """
     Apply current theme to an Output instance.
-    
+
     Args:
         output_instance: Output instance to configure
     """
     theme = get_theme()
 
     # Update Output's internal theme
-    if hasattr(output_instance, 'set_theme'):
+    if hasattr(output_instance, "set_theme"):
         output_instance.set_theme(theme)
-    elif hasattr(output_instance, '_theme'):
+    elif hasattr(output_instance, "_theme"):
         output_instance._theme = theme
 
     # Could also update specific style attributes if needed
@@ -487,10 +493,10 @@ def apply_theme_to_output(output_instance) -> None:
 def get_style_for_level(level: str) -> str:
     """
     Get style for a log/output level.
-    
+
     Args:
         level: Level name (success, error, warning, info, debug)
-        
+
     Returns:
         Style string
     """
@@ -501,11 +507,11 @@ def get_style_for_level(level: str) -> str:
 def format_with_theme(text: str, component: str) -> str:
     """
     Format text according to component style.
-    
+
     Args:
         text: Text to format
         component: Component type
-        
+
     Returns:
         Formatted text
     """

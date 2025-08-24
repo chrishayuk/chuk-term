@@ -1,5 +1,7 @@
 """Unit tests for terminal management utilities."""
 
+# ruff: noqa: ARG002
+
 import asyncio
 import os
 import sys
@@ -26,22 +28,22 @@ from chuk_term.ui.terminal import (
 class TestTerminalManagerClear:
     """Test terminal clearing functionality."""
 
-    @patch('os.system')
-    @patch('sys.platform', 'win32')
+    @patch("os.system")
+    @patch("sys.platform", "win32")
     def test_clear_windows(self, mock_system):
         """Test clearing terminal on Windows."""
         TerminalManager.clear()
         mock_system.assert_called_once_with("cls")
 
-    @patch('os.system')
-    @patch('sys.platform', 'linux')
+    @patch("os.system")
+    @patch("sys.platform", "linux")
     def test_clear_unix(self, mock_system):
         """Test clearing terminal on Unix-like systems."""
         TerminalManager.clear()
         mock_system.assert_called_once_with("clear")
 
-    @patch('os.system')
-    @patch('sys.platform', 'darwin')
+    @patch("os.system")
+    @patch("sys.platform", "darwin")
     def test_clear_macos(self, mock_system):
         """Test clearing terminal on macOS."""
         TerminalManager.clear()
@@ -51,23 +53,23 @@ class TestTerminalManagerClear:
 class TestTerminalManagerReset:
     """Test terminal reset functionality."""
 
-    @patch('os.system')
-    @patch('sys.platform', 'linux')
+    @patch("os.system")
+    @patch("sys.platform", "linux")
     def test_reset_unix(self, mock_system):
         """Test resetting terminal on Unix-like systems."""
         TerminalManager.reset()
         mock_system.assert_called_once_with("stty sane")
 
-    @patch('os.system')
-    @patch('sys.platform', 'win32')
+    @patch("os.system")
+    @patch("sys.platform", "win32")
     def test_reset_windows_skipped(self, mock_system):
         """Test that reset is skipped on Windows."""
         TerminalManager.reset()
         mock_system.assert_not_called()
 
-    @patch('os.system', side_effect=Exception("Command failed"))
-    @patch('sys.platform', 'linux')
-    @patch('chuk_term.ui.terminal.logger')
+    @patch("os.system", side_effect=Exception("Command failed"))
+    @patch("sys.platform", "linux")
+    @patch("chuk_term.ui.terminal.logger")
     def test_reset_error_handled(self, mock_logger, mock_system):
         """Test that reset errors are handled gracefully."""
         TerminalManager.reset()
@@ -79,9 +81,9 @@ class TestTerminalManagerReset:
 class TestTerminalManagerRestore:
     """Test terminal restoration functionality."""
 
-    @patch.object(TerminalManager, 'reset')
-    @patch.object(TerminalManager, 'cleanup_asyncio')
-    @patch('gc.collect')
+    @patch.object(TerminalManager, "reset")
+    @patch.object(TerminalManager, "cleanup_asyncio")
+    @patch("gc.collect")
     def test_restore_full_cleanup(self, mock_gc, mock_cleanup_asyncio, mock_reset):
         """Test full terminal restoration."""
         TerminalManager.restore()
@@ -95,7 +97,7 @@ class TestTerminalManagerRestore:
 class TestTerminalManagerAsyncioCleanup:
     """Test asyncio cleanup functionality."""
 
-    @patch('asyncio.get_running_loop')
+    @patch("asyncio.get_running_loop")
     def test_cleanup_with_running_loop(self, mock_get_running):
         """Test cleanup when called from within a running loop."""
         mock_loop = Mock()
@@ -107,23 +109,23 @@ class TestTerminalManagerAsyncioCleanup:
         # Should not try to cancel tasks when in running loop
         mock_loop.run_until_complete.assert_not_called()
 
-    @patch('asyncio.get_running_loop', side_effect=RuntimeError("No running loop"))
-    @patch('asyncio.get_event_loop')
+    @patch("asyncio.get_running_loop", side_effect=RuntimeError("No running loop"))
+    @patch("asyncio.get_event_loop")
     def test_cleanup_with_event_loop_no_tasks(self, mock_get_event, mock_get_running):
         """Test cleanup with event loop but no tasks."""
         mock_loop = Mock()
         mock_loop.is_closed.return_value = False
         mock_get_event.return_value = mock_loop
 
-        with patch('asyncio.all_tasks', return_value=set()):
+        with patch("asyncio.all_tasks", return_value=set()):
             TerminalManager.cleanup_asyncio()
 
         # Should try to shutdown async generators
         mock_loop.run_until_complete.assert_called()
         mock_loop.close.assert_called_once()
 
-    @patch('asyncio.get_running_loop', side_effect=RuntimeError("No running loop"))
-    @patch('asyncio.get_event_loop')
+    @patch("asyncio.get_running_loop", side_effect=RuntimeError("No running loop"))
+    @patch("asyncio.get_event_loop")
     def test_cleanup_with_pending_tasks(self, mock_get_event, mock_get_running):
         """Test cleanup with pending tasks."""
         mock_loop = Mock()
@@ -139,9 +141,11 @@ class TestTerminalManagerAsyncioCleanup:
         mock_task2.done.return_value = True  # Already done
         mock_task2.cancel.return_value = None
 
-        with patch('asyncio.all_tasks', return_value={mock_task1, mock_task2}):
-            with patch('asyncio.gather', return_value=AsyncMock()):
-                TerminalManager.cleanup_asyncio()
+        with (
+            patch("asyncio.all_tasks", return_value={mock_task1, mock_task2}),
+            patch("asyncio.gather", return_value=AsyncMock()),
+        ):
+            TerminalManager.cleanup_asyncio()
 
         # Should only cancel tasks that aren't done
         mock_task1.cancel.assert_called_once()
@@ -150,8 +154,8 @@ class TestTerminalManagerAsyncioCleanup:
         # Should try to wait for cancellation
         assert mock_loop.run_until_complete.called
 
-    @patch('asyncio.get_running_loop', side_effect=RuntimeError("No running loop"))
-    @patch('asyncio.get_event_loop')
+    @patch("asyncio.get_running_loop", side_effect=RuntimeError("No running loop"))
+    @patch("asyncio.get_event_loop")
     def test_cleanup_with_closed_loop(self, mock_get_event, mock_get_running):
         """Test cleanup with already closed loop."""
         mock_loop = Mock()
@@ -164,31 +168,31 @@ class TestTerminalManagerAsyncioCleanup:
         mock_loop.run_until_complete.assert_not_called()
         mock_loop.close.assert_not_called()
 
-    @patch('asyncio.get_running_loop', side_effect=RuntimeError("No running loop"))
-    @patch('asyncio.get_event_loop', side_effect=RuntimeError("No event loop"))
+    @patch("asyncio.get_running_loop", side_effect=RuntimeError("No running loop"))
+    @patch("asyncio.get_event_loop", side_effect=RuntimeError("No event loop"))
     def test_cleanup_no_event_loop(self, mock_get_event, mock_get_running):
         """Test cleanup when there's no event loop at all."""
         # Should return without error
         TerminalManager.cleanup_asyncio()
 
-    @patch('asyncio.get_running_loop', side_effect=RuntimeError("No running loop"))
-    @patch('asyncio.get_event_loop')
-    @patch('chuk_term.ui.terminal.logger')
+    @patch("asyncio.get_running_loop", side_effect=RuntimeError("No running loop"))
+    @patch("asyncio.get_event_loop")
+    @patch("chuk_term.ui.terminal.logger")
     def test_cleanup_task_error_handled(self, mock_logger, mock_get_event, mock_get_running):
         """Test that task cleanup errors are handled."""
         mock_loop = Mock()
         mock_loop.is_closed.return_value = False
         mock_get_event.return_value = mock_loop
 
-        with patch('asyncio.all_tasks', side_effect=Exception("Task error")):
+        with patch("asyncio.all_tasks", side_effect=Exception("Task error")):
             TerminalManager.cleanup_asyncio()
 
         # Should log debug message about the error
         mock_logger.debug.assert_called()
 
-    @patch('asyncio.get_running_loop', side_effect=RuntimeError("No running loop"))
-    @patch('asyncio.get_event_loop')
-    @patch('chuk_term.ui.terminal.logger')
+    @patch("asyncio.get_running_loop", side_effect=RuntimeError("No running loop"))
+    @patch("asyncio.get_event_loop")
+    @patch("chuk_term.ui.terminal.logger")
     def test_cleanup_shutdown_asyncgens_error(self, mock_logger, mock_get_event, mock_get_running):
         """Test that async generator shutdown errors are handled."""
         mock_loop = Mock()
@@ -196,14 +200,14 @@ class TestTerminalManagerAsyncioCleanup:
         mock_loop.shutdown_asyncgens.side_effect = Exception("Shutdown error")
         mock_get_event.return_value = mock_loop
 
-        with patch('asyncio.all_tasks', return_value=set()):
+        with patch("asyncio.all_tasks", return_value=set()):
             TerminalManager.cleanup_asyncio()
 
         # Should log debug message about the error
         assert any("async generators" in str(call) for call in mock_logger.debug.call_args_list)
 
-    @patch('asyncio.get_running_loop', side_effect=Exception("Unexpected error"))
-    @patch('chuk_term.ui.terminal.logger')
+    @patch("asyncio.get_running_loop", side_effect=Exception("Unexpected error"))
+    @patch("chuk_term.ui.terminal.logger")
     def test_cleanup_general_error_handled(self, mock_logger, mock_get_running):
         """Test that general cleanup errors are handled."""
         TerminalManager.cleanup_asyncio()
@@ -212,9 +216,9 @@ class TestTerminalManagerAsyncioCleanup:
         mock_logger.debug.assert_called_once()
         assert "Asyncio cleanup error" in mock_logger.debug.call_args[0][0]
 
-    @patch('asyncio.get_running_loop', side_effect=RuntimeError("No running loop"))
-    @patch('asyncio.get_event_loop')
-    @patch('chuk_term.ui.terminal.logger')
+    @patch("asyncio.get_running_loop", side_effect=RuntimeError("No running loop"))
+    @patch("asyncio.get_event_loop")
+    @patch("chuk_term.ui.terminal.logger")
     def test_cleanup_uses_task_all_tasks_fallback(self, mock_logger, mock_get_event, mock_get_running):
         """Test cleanup when asyncio.all_tasks is not available."""
         mock_loop = Mock()
@@ -223,18 +227,20 @@ class TestTerminalManagerAsyncioCleanup:
 
         # When asyncio.all_tasks doesn't exist and neither does Task.all_tasks,
         # the code will raise an AttributeError which is caught
-        with patch.object(asyncio, 'all_tasks', new=None):
-            with patch('asyncio.Task', spec=[]):  # Task without all_tasks attribute
-                TerminalManager.cleanup_asyncio()
-                # Should log the error
-                mock_logger.debug.assert_called()
-                assert "Error during task cleanup" in str(mock_logger.debug.call_args_list)
+        with (
+            patch.object(asyncio, "all_tasks", new=None),
+            patch("asyncio.Task", spec=[]),  # Task without all_tasks attribute
+        ):
+            TerminalManager.cleanup_asyncio()
+            # Should log the error
+            mock_logger.debug.assert_called()
+            assert "Error during task cleanup" in str(mock_logger.debug.call_args_list)
 
 
 class TestTerminalManagerGetSize:
     """Test terminal size detection."""
 
-    @patch('shutil.get_terminal_size')
+    @patch("shutil.get_terminal_size")
     def test_get_size_normal(self, mock_get_size):
         """Test getting terminal size normally."""
         mock_get_size.return_value = os.terminal_size((120, 40))
@@ -245,7 +251,7 @@ class TestTerminalManagerGetSize:
         assert rows == 40
         mock_get_size.assert_called_once()
 
-    @patch('shutil.get_terminal_size', side_effect=Exception("No terminal"))
+    @patch("shutil.get_terminal_size", side_effect=Exception("No terminal"))
     def test_get_size_fallback(self, mock_get_size):
         """Test fallback terminal size when detection fails."""
         cols, rows = TerminalManager.get_size()
@@ -258,13 +264,13 @@ class TestTerminalManagerGetSize:
 class TestTerminalManagerSupportsColor:
     """Test color support detection."""
 
-    @patch('sys.stdout.isatty', return_value=True)
+    @patch("sys.stdout.isatty", return_value=True)
     def test_supports_color_tty(self, mock_isatty):
         """Test color support when stdout is a TTY."""
         assert TerminalManager.supports_color() is True
         mock_isatty.assert_called_once()
 
-    @patch('sys.stdout.isatty', return_value=False)
+    @patch("sys.stdout.isatty", return_value=False)
     def test_supports_color_no_tty(self, mock_isatty):
         """Test no color support when stdout is not a TTY."""
         assert TerminalManager.supports_color() is False
@@ -274,15 +280,15 @@ class TestTerminalManagerSupportsColor:
 class TestTerminalManagerSetTitle:
     """Test terminal title setting."""
 
-    @patch('os.system')
-    @patch('sys.platform', 'win32')
+    @patch("os.system")
+    @patch("sys.platform", "win32")
     def test_set_title_windows(self, mock_system):
         """Test setting title on Windows."""
         TerminalManager.set_title("Test Title")
         mock_system.assert_called_once_with("title Test Title")
 
-    @patch('sys.stdout')
-    @patch('sys.platform', 'linux')
+    @patch("sys.stdout")
+    @patch("sys.platform", "linux")
     def test_set_title_unix(self, mock_stdout):
         """Test setting title on Unix-like systems."""
         mock_stdout.write = Mock()
@@ -293,8 +299,8 @@ class TestTerminalManagerSetTitle:
         mock_stdout.write.assert_called_once_with("\033]0;Test Title\007")
         mock_stdout.flush.assert_called_once()
 
-    @patch('sys.stdout')
-    @patch('sys.platform', 'darwin')
+    @patch("sys.stdout")
+    @patch("sys.platform", "darwin")
     def test_set_title_macos(self, mock_stdout):
         """Test setting title on macOS."""
         mock_stdout.write = Mock()
@@ -305,8 +311,8 @@ class TestTerminalManagerSetTitle:
         mock_stdout.write.assert_called_once_with("\033]0;macOS Terminal\007")
         mock_stdout.flush.assert_called_once()
 
-    @patch('sys.stdout')
-    @patch('sys.platform', 'linux')
+    @patch("sys.stdout")
+    @patch("sys.platform", "linux")
     def test_set_title_with_special_chars(self, mock_stdout):
         """Test setting title with special characters."""
         mock_stdout.write = Mock()
@@ -321,25 +327,25 @@ class TestTerminalManagerSetTitle:
 class TestBackwardCompatibilityFunctions:
     """Test backward compatibility convenience functions."""
 
-    @patch.object(TerminalManager, 'clear')
+    @patch.object(TerminalManager, "clear")
     def test_clear_screen(self, mock_clear):
         """Test clear_screen convenience function."""
         clear_screen()
         mock_clear.assert_called_once()
 
-    @patch.object(TerminalManager, 'restore')
+    @patch.object(TerminalManager, "restore")
     def test_restore_terminal(self, mock_restore):
         """Test restore_terminal convenience function."""
         restore_terminal()
         mock_restore.assert_called_once()
 
-    @patch.object(TerminalManager, 'reset')
+    @patch.object(TerminalManager, "reset")
     def test_reset_terminal(self, mock_reset):
         """Test reset_terminal convenience function."""
         reset_terminal()
         mock_reset.assert_called_once()
 
-    @patch.object(TerminalManager, 'get_size', return_value=(100, 50))
+    @patch.object(TerminalManager, "get_size", return_value=(100, 50))
     def test_get_terminal_size(self, mock_get_size):
         """Test get_terminal_size convenience function."""
         cols, rows = get_terminal_size()
@@ -347,7 +353,7 @@ class TestBackwardCompatibilityFunctions:
         assert rows == 50
         mock_get_size.assert_called_once()
 
-    @patch.object(TerminalManager, 'set_title')
+    @patch.object(TerminalManager, "set_title")
     def test_set_terminal_title(self, mock_set_title):
         """Test set_terminal_title convenience function."""
         set_terminal_title("New Title")
@@ -357,13 +363,12 @@ class TestBackwardCompatibilityFunctions:
 class TestIntegrationScenarios:
     """Test integration scenarios for terminal management."""
 
-    @patch('os.system')
-    @patch('gc.collect')
-    @patch('asyncio.get_running_loop', side_effect=RuntimeError("No running loop"))
-    @patch('asyncio.get_event_loop', side_effect=RuntimeError("No event loop"))
-    @patch('sys.platform', 'linux')
-    def test_full_restore_no_asyncio(self, mock_get_event, mock_get_running,
-                                     mock_gc, mock_system):
+    @patch("os.system")
+    @patch("gc.collect")
+    @patch("asyncio.get_running_loop", side_effect=RuntimeError("No running loop"))
+    @patch("asyncio.get_event_loop", side_effect=RuntimeError("No event loop"))
+    @patch("sys.platform", "linux")
+    def test_full_restore_no_asyncio(self, mock_get_event, mock_get_running, mock_gc, mock_system):
         """Test full restore when there's no asyncio loop."""
         TerminalManager.restore()
 
@@ -371,14 +376,13 @@ class TestIntegrationScenarios:
         mock_system.assert_called_once_with("stty sane")
         mock_gc.assert_called_once()
 
-    @patch('os.system')
-    @patch('gc.collect')
-    @patch('asyncio.get_running_loop', side_effect=RuntimeError("No running loop"))
-    @patch('asyncio.get_event_loop')
-    @patch('asyncio.all_tasks')
-    @patch('sys.platform', 'linux')
-    def test_full_restore_with_tasks(self, mock_all_tasks, mock_get_event,
-                                     mock_get_running, mock_gc, mock_system):
+    @patch("os.system")
+    @patch("gc.collect")
+    @patch("asyncio.get_running_loop", side_effect=RuntimeError("No running loop"))
+    @patch("asyncio.get_event_loop")
+    @patch("asyncio.all_tasks")
+    @patch("sys.platform", "linux")
+    def test_full_restore_with_tasks(self, mock_all_tasks, mock_get_event, mock_get_running, mock_gc, mock_system):
         """Test full restore with active asyncio tasks."""
         # Setup mock loop with tasks
         mock_loop = Mock()
@@ -400,8 +404,8 @@ class TestIntegrationScenarios:
         # Should collect garbage
         mock_gc.assert_called_once()
 
-    @patch('shutil.get_terminal_size', side_effect=Exception("No terminal"))
-    @patch('sys.stdout.isatty', return_value=False)
+    @patch("shutil.get_terminal_size", side_effect=Exception("No terminal"))
+    @patch("sys.stdout.isatty", return_value=False)
     def test_non_interactive_environment(self, mock_isatty, mock_get_size):
         """Test terminal operations in non-interactive environment."""
         # Should handle gracefully when not in a terminal
@@ -415,17 +419,17 @@ class TestIntegrationScenarios:
 class TestErrorHandling:
     """Test error handling in terminal operations."""
 
-    @patch('os.system', side_effect=OSError("Permission denied"))
-    @patch('sys.platform', 'linux')
-    @patch('chuk_term.ui.terminal.logger')
+    @patch("os.system", side_effect=OSError("Permission denied"))
+    @patch("sys.platform", "linux")
+    @patch("chuk_term.ui.terminal.logger")
     def test_reset_permission_error(self, mock_logger, mock_system):
         """Test handling permission errors during reset."""
         TerminalManager.reset()
         mock_logger.debug.assert_called_once()
         assert "Could not reset terminal" in mock_logger.debug.call_args[0][0]
 
-    @patch('sys.stdout')
-    @patch('sys.platform', 'linux')
+    @patch("sys.stdout")
+    @patch("sys.platform", "linux")
     def test_set_title_io_error(self, mock_stdout):
         """Test handling IO errors when setting title."""
         # Set up mock to raise IOError
@@ -437,9 +441,9 @@ class TestErrorHandling:
         with pytest.raises(IOError, match="Broken pipe"):
             TerminalManager.set_title("Test")
 
-    @patch('asyncio.get_running_loop', side_effect=RuntimeError("No running loop"))
-    @patch('asyncio.get_event_loop')
-    @patch('chuk_term.ui.terminal.logger')
+    @patch("asyncio.get_running_loop", side_effect=RuntimeError("No running loop"))
+    @patch("asyncio.get_event_loop")
+    @patch("chuk_term.ui.terminal.logger")
     def test_cleanup_loop_close_error(self, mock_logger, mock_get_event, mock_get_running):
         """Test handling errors when closing event loop."""
         mock_loop = Mock()
@@ -447,7 +451,7 @@ class TestErrorHandling:
         mock_loop.close.side_effect = Exception("Cannot close")
         mock_get_event.return_value = mock_loop
 
-        with patch('asyncio.all_tasks', return_value=set()):
+        with patch("asyncio.all_tasks", return_value=set()):
             # Should not raise exception
             TerminalManager.cleanup_asyncio()
 
@@ -455,101 +459,101 @@ class TestErrorHandling:
 class TestCursorControl:
     """Test cursor control methods."""
 
-    @patch('sys.platform', 'linux')
-    @patch('sys.stdout')
+    @patch("sys.platform", "linux")
+    @patch("sys.stdout")
     def test_hide_cursor_unix(self, mock_stdout):
         """Test hiding cursor on Unix."""
         TerminalManager.hide_cursor()
-        mock_stdout.write.assert_called_with('\033[?25l')
+        mock_stdout.write.assert_called_with("\033[?25l")
         mock_stdout.flush.assert_called_once()
 
-    @patch('sys.platform', 'win32')
-    @patch('sys.stdout')
+    @patch("sys.platform", "win32")
+    @patch("sys.stdout")
     def test_hide_cursor_windows(self, mock_stdout):
         """Test hiding cursor on Windows (no-op)."""
         TerminalManager.hide_cursor()
         mock_stdout.write.assert_not_called()
 
-    @patch('sys.platform', 'darwin')
-    @patch('sys.stdout')
+    @patch("sys.platform", "darwin")
+    @patch("sys.stdout")
     def test_show_cursor_unix(self, mock_stdout):
         """Test showing cursor on Unix."""
         TerminalManager.show_cursor()
-        mock_stdout.write.assert_called_with('\033[?25h')
+        mock_stdout.write.assert_called_with("\033[?25h")
         mock_stdout.flush.assert_called_once()
 
-    @patch('sys.platform', 'linux')
-    @patch('sys.stdout')
+    @patch("sys.platform", "linux")
+    @patch("sys.stdout")
     def test_save_cursor_position(self, mock_stdout):
         """Test saving cursor position."""
         TerminalManager.save_cursor_position()
-        mock_stdout.write.assert_called_with('\033[s')
+        mock_stdout.write.assert_called_with("\033[s")
         mock_stdout.flush.assert_called_once()
 
-    @patch('sys.platform', 'linux')
-    @patch('sys.stdout')
+    @patch("sys.platform", "linux")
+    @patch("sys.stdout")
     def test_restore_cursor_position(self, mock_stdout):
         """Test restoring cursor position."""
         TerminalManager.restore_cursor_position()
-        mock_stdout.write.assert_called_with('\033[u')
+        mock_stdout.write.assert_called_with("\033[u")
         mock_stdout.flush.assert_called_once()
 
-    @patch('sys.platform', 'linux')
-    @patch('sys.stdout')
+    @patch("sys.platform", "linux")
+    @patch("sys.stdout")
     def test_move_cursor_up(self, mock_stdout):
         """Test moving cursor up."""
         TerminalManager.move_cursor_up(3)
-        mock_stdout.write.assert_called_with('\033[3A')
+        mock_stdout.write.assert_called_with("\033[3A")
         mock_stdout.flush.assert_called_once()
 
-    @patch('sys.platform', 'linux')
-    @patch('sys.stdout')
+    @patch("sys.platform", "linux")
+    @patch("sys.stdout")
     def test_move_cursor_down(self, mock_stdout):
         """Test moving cursor down."""
         TerminalManager.move_cursor_down(5)
-        mock_stdout.write.assert_called_with('\033[5B')
+        mock_stdout.write.assert_called_with("\033[5B")
         mock_stdout.flush.assert_called_once()
 
-    @patch('sys.platform', 'linux')
-    @patch('sys.stdout')
+    @patch("sys.platform", "linux")
+    @patch("sys.stdout")
     def test_clear_line(self, mock_stdout):
         """Test clearing line."""
         TerminalManager.clear_line()
-        mock_stdout.write.assert_called_with('\033[2K\r')
+        mock_stdout.write.assert_called_with("\033[2K\r")
         mock_stdout.flush.assert_called_once()
 
-    @patch('sys.platform', 'linux')
-    @patch('sys.stdout')
+    @patch("sys.platform", "linux")
+    @patch("sys.stdout")
     def test_convenience_functions(self, mock_stdout):
         """Test convenience functions."""
         hide_cursor()
-        mock_stdout.write.assert_called_with('\033[?25l')
+        mock_stdout.write.assert_called_with("\033[?25l")
 
         show_cursor()
-        mock_stdout.write.assert_called_with('\033[?25h')
+        mock_stdout.write.assert_called_with("\033[?25h")
 
 
 class TestAlternateScreen:
     """Test alternate screen buffer functionality."""
 
-    @patch('sys.platform', 'linux')
-    @patch('sys.stdout')
+    @patch("sys.platform", "linux")
+    @patch("sys.stdout")
     def test_enter_alternate_screen(self, mock_stdout):
         """Test entering alternate screen."""
         TerminalManager.enter_alternate_screen()
-        mock_stdout.write.assert_called_with('\033[?1049h')
+        mock_stdout.write.assert_called_with("\033[?1049h")
         mock_stdout.flush.assert_called_once()
 
-    @patch('sys.platform', 'linux')
-    @patch('sys.stdout')
+    @patch("sys.platform", "linux")
+    @patch("sys.stdout")
     def test_exit_alternate_screen(self, mock_stdout):
         """Test exiting alternate screen."""
         TerminalManager.exit_alternate_screen()
-        mock_stdout.write.assert_called_with('\033[?1049l')
+        mock_stdout.write.assert_called_with("\033[?1049l")
         mock_stdout.flush.assert_called_once()
 
-    @patch('sys.platform', 'win32')
-    @patch('sys.stdout')
+    @patch("sys.platform", "win32")
+    @patch("sys.stdout")
     def test_alternate_screen_windows(self, mock_stdout):
         """Test alternate screen on Windows (no-op)."""
         TerminalManager.enter_alternate_screen()
@@ -558,39 +562,38 @@ class TestAlternateScreen:
         TerminalManager.exit_alternate_screen()
         mock_stdout.write.assert_not_called()
 
-    @patch('sys.platform', 'linux')
-    @patch('sys.stdout')
+    @patch("sys.platform", "linux")
+    @patch("sys.stdout")
     def test_alternate_screen_context_manager(self, mock_stdout):
         """Test alternate screen context manager."""
         with TerminalManager.alternate_screen():
             # Should enter alternate screen and hide cursor
             calls = mock_stdout.write.call_args_list
             # Check the actual arguments passed to write()
-            assert calls[0][0][0] == '\033[?1049h'
-            assert calls[1][0][0] == '\033[?25l'
+            assert calls[0][0][0] == "\033[?1049h"
+            assert calls[1][0][0] == "\033[?25l"
 
         # Should restore cursor and exit alternate screen
         calls = mock_stdout.write.call_args_list
         # Check the actual arguments in the last calls
-        assert calls[-2][0][0] == '\033[?25h'
-        assert calls[-1][0][0] == '\033[?1049l'
+        assert calls[-2][0][0] == "\033[?25h"
+        assert calls[-1][0][0] == "\033[?1049l"
 
-    @patch('sys.platform', 'linux')
-    @patch('sys.stdout')
+    @patch("sys.platform", "linux")
+    @patch("sys.stdout")
     def test_alternate_screen_context_with_exception(self, mock_stdout):
         """Test alternate screen context manager with exception."""
-        with pytest.raises(ValueError):
-            with TerminalManager.alternate_screen():
-                raise ValueError("Test error")
+        with pytest.raises(ValueError), TerminalManager.alternate_screen():
+            raise ValueError("Test error")
 
         # Should still restore on exception
         calls = mock_stdout.write.call_args_list
         # Check the actual arguments in the last calls
-        assert calls[-2][0][0] == '\033[?25h'
-        assert calls[-1][0][0] == '\033[?1049l'
+        assert calls[-2][0][0] == "\033[?25h"
+        assert calls[-1][0][0] == "\033[?1049l"
 
-    @patch('sys.platform', 'linux')
-    @patch('sys.stdout')
+    @patch("sys.platform", "linux")
+    @patch("sys.stdout")
     def test_convenience_alternate_screen(self, mock_stdout):
         """Test convenience alternate_screen function."""
         with alternate_screen():
@@ -598,25 +601,25 @@ class TestAlternateScreen:
 
         # Should have entered and exited
         call_args = [call[0][0] for call in mock_stdout.write.call_args_list]
-        assert '\033[?1049h' in call_args
-        assert '\033[?1049l' in call_args
+        assert "\033[?1049h" in call_args
+        assert "\033[?1049l" in call_args
 
 
 class TestTerminalBell:
     """Test terminal bell functionality."""
 
-    @patch('sys.stdout')
+    @patch("sys.stdout")
     def test_bell(self, mock_stdout):
         """Test sounding terminal bell."""
         TerminalManager.bell()
-        mock_stdout.write.assert_called_with('\a')
+        mock_stdout.write.assert_called_with("\a")
         mock_stdout.flush.assert_called_once()
 
-    @patch('sys.stdout')
+    @patch("sys.stdout")
     def test_bell_convenience(self, mock_stdout):
         """Test bell convenience function."""
         bell()
-        mock_stdout.write.assert_called_with('\a')
+        mock_stdout.write.assert_called_with("\a")
 
 
 class TestHyperlinks:
@@ -632,31 +635,31 @@ class TestHyperlinks:
         link = TerminalManager.hyperlink("https://example.com", "Click here")
         assert "Click here" in link
 
-    @patch.dict(os.environ, {'TERM_PROGRAM': 'iTerm.app'})
+    @patch.dict(os.environ, {"TERM_PROGRAM": "iTerm.app"})
     def test_hyperlink_iterm(self):
         """Test hyperlink in iTerm."""
         link = TerminalManager.hyperlink("https://example.com", "Test")
-        assert link == '\033]8;;https://example.com\033\\Test\033]8;;\033\\'
+        assert link == "\033]8;;https://example.com\033\\Test\033]8;;\033\\"
 
-    @patch.dict(os.environ, {'TERM_PROGRAM': 'kitty'})
+    @patch.dict(os.environ, {"TERM_PROGRAM": "kitty"})
     def test_hyperlink_kitty(self):
         """Test hyperlink in Kitty."""
         link = TerminalManager.hyperlink("https://example.com", "Test")
-        assert link == '\033]8;;https://example.com\033\\Test\033]8;;\033\\'
+        assert link == "\033]8;;https://example.com\033\\Test\033]8;;\033\\"
 
-    @patch.dict(os.environ, {'TERM_PROGRAM': 'generic'})
+    @patch.dict(os.environ, {"TERM_PROGRAM": "generic"})
     def test_hyperlink_fallback(self):
         """Test hyperlink fallback for unsupported terminals."""
         link = TerminalManager.hyperlink("https://example.com", "Test")
         assert link == "Test (https://example.com)"
 
-    @patch.dict(os.environ, {'TERM_PROGRAM': 'generic'})
+    @patch.dict(os.environ, {"TERM_PROGRAM": "generic"})
     def test_hyperlink_fallback_no_text(self):
         """Test hyperlink fallback without custom text."""
         link = TerminalManager.hyperlink("https://example.com")
         assert link == "https://example.com"
 
-    @patch('builtins.print')
+    @patch("builtins.print")
     def test_print_hyperlink(self, mock_print):
         """Test printing hyperlink."""
         TerminalManager.print_hyperlink("https://example.com", "Click")
@@ -673,69 +676,73 @@ class TestHyperlinks:
 class TestColorDetection:
     """Test color detection methods."""
 
-    @patch.dict(os.environ, {'COLORTERM': 'truecolor'})
+    @patch.dict(os.environ, {"COLORTERM": "truecolor"})
     def test_supports_truecolor(self):
         """Test truecolor detection."""
         assert TerminalManager.supports_truecolor() is True
 
-    @patch.dict(os.environ, {'COLORTERM': ''})
+    @patch.dict(os.environ, {"COLORTERM": ""})
     def test_no_truecolor(self):
         """Test no truecolor."""
         assert TerminalManager.supports_truecolor() is False
 
-    @patch.dict(os.environ, {'TERM': 'xterm-256color'})
+    @patch.dict(os.environ, {"TERM": "xterm-256color"})
     def test_supports_256_colors(self):
         """Test 256 color detection."""
         assert TerminalManager.supports_256_colors() is True
 
-    @patch.dict(os.environ, {'TERM': 'xterm'})
+    @patch.dict(os.environ, {"TERM": "xterm"})
     def test_no_256_colors(self):
         """Test no 256 colors."""
-        with patch.object(TerminalManager, 'supports_truecolor', return_value=False):
+        with patch.object(TerminalManager, "supports_truecolor", return_value=False):
             assert TerminalManager.supports_256_colors() is False
 
-    @patch.dict(os.environ, {'COLORTERM': 'truecolor'})
+    @patch.dict(os.environ, {"COLORTERM": "truecolor"})
     def test_256_colors_via_truecolor(self):
         """Test 256 colors detected via truecolor."""
         assert TerminalManager.supports_256_colors() is True
 
-    @patch('chuk_term.ui.terminal.TerminalManager.supports_color')
+    @patch("chuk_term.ui.terminal.TerminalManager.supports_color")
     def test_get_color_level(self, mock_supports_color):
         """Test color level detection."""
         # Test mono
         mock_supports_color.return_value = False
-        assert TerminalManager.get_color_level() == 'mono'
+        assert TerminalManager.get_color_level() == "mono"
 
         # Test truecolor
         mock_supports_color.return_value = True
-        with patch.object(TerminalManager, 'supports_truecolor', return_value=True):
-            assert TerminalManager.get_color_level() == 'truecolor'
+        with patch.object(TerminalManager, "supports_truecolor", return_value=True):
+            assert TerminalManager.get_color_level() == "truecolor"
 
         # Test 256 colors
-        with patch.object(TerminalManager, 'supports_truecolor', return_value=False):
-            with patch.object(TerminalManager, 'supports_256_colors', return_value=True):
-                assert TerminalManager.get_color_level() == '256'
+        with (
+            patch.object(TerminalManager, "supports_truecolor", return_value=False),
+            patch.object(TerminalManager, "supports_256_colors", return_value=True),
+        ):
+            assert TerminalManager.get_color_level() == "256"
 
         # Test 16 colors
-        with patch.object(TerminalManager, 'supports_truecolor', return_value=False):
-            with patch.object(TerminalManager, 'supports_256_colors', return_value=False):
-                assert TerminalManager.get_color_level() == '16'
+        with (
+            patch.object(TerminalManager, "supports_truecolor", return_value=False),
+            patch.object(TerminalManager, "supports_256_colors", return_value=False),
+        ):
+            assert TerminalManager.get_color_level() == "16"
 
 
 class TestTerminalInfo:
     """Test terminal information methods."""
 
-    @patch.dict(os.environ, {'TERM_PROGRAM': 'iTerm.app'})
+    @patch.dict(os.environ, {"TERM_PROGRAM": "iTerm.app"})
     def test_get_terminal_program(self):
         """Test getting terminal program."""
-        assert TerminalManager.get_terminal_program() == 'iTerm.app'
+        assert TerminalManager.get_terminal_program() == "iTerm.app"
 
     @patch.dict(os.environ, {}, clear=True)
     def test_get_terminal_program_unknown(self):
         """Test unknown terminal program."""
-        assert TerminalManager.get_terminal_program() == 'unknown'
+        assert TerminalManager.get_terminal_program() == "unknown"
 
-    @patch.dict(os.environ, {'TMUX': '/tmp/tmux-1000/default'})
+    @patch.dict(os.environ, {"TMUX": "/tmp/tmux-1000/default"})
     def test_is_tmux(self):
         """Test tmux detection."""
         assert TerminalManager.is_tmux() is True
@@ -745,7 +752,7 @@ class TestTerminalInfo:
         """Test not in tmux."""
         assert TerminalManager.is_tmux() is False
 
-    @patch.dict(os.environ, {'STY': '12345.pts-0.hostname'})
+    @patch.dict(os.environ, {"STY": "12345.pts-0.hostname"})
     def test_is_screen(self):
         """Test GNU screen detection."""
         assert TerminalManager.is_screen() is True
@@ -755,12 +762,12 @@ class TestTerminalInfo:
         """Test not in screen."""
         assert TerminalManager.is_screen() is False
 
-    @patch.dict(os.environ, {'SSH_CLIENT': '192.168.1.1 12345 22'})
+    @patch.dict(os.environ, {"SSH_CLIENT": "192.168.1.1 12345 22"})
     def test_is_ssh_client(self):
         """Test SSH detection via SSH_CLIENT."""
         assert TerminalManager.is_ssh() is True
 
-    @patch.dict(os.environ, {'SSH_TTY': '/dev/pts/0'})
+    @patch.dict(os.environ, {"SSH_TTY": "/dev/pts/0"})
     def test_is_ssh_tty(self):
         """Test SSH detection via SSH_TTY."""
         assert TerminalManager.is_ssh() is True
@@ -770,43 +777,46 @@ class TestTerminalInfo:
         """Test not over SSH."""
         assert TerminalManager.is_ssh() is False
 
-    @patch('chuk_term.ui.terminal.TerminalManager.get_size')
-    @patch('sys.stdout')
+    @patch("chuk_term.ui.terminal.TerminalManager.get_size")
+    @patch("sys.stdout")
     def test_get_terminal_info(self, mock_stdout, mock_get_size):
         """Test comprehensive terminal info."""
         mock_get_size.return_value = (120, 40)
-        mock_stdout.encoding = 'utf-8'
+        mock_stdout.encoding = "utf-8"
         mock_stdout.isatty.return_value = True
 
-        with patch.dict(os.environ, {
-            'TERM_PROGRAM': 'iTerm.app',
-            'TERM': 'xterm-256color',
-            'TMUX': 'yes',
-            'SSH_CLIENT': '192.168.1.1 12345 22'
-        }):
+        with patch.dict(
+            os.environ,
+            {
+                "TERM_PROGRAM": "iTerm.app",
+                "TERM": "xterm-256color",
+                "TMUX": "yes",
+                "SSH_CLIENT": "192.168.1.1 12345 22",
+            },
+        ):
             info = TerminalManager.get_terminal_info()
 
-            assert info['program'] == 'iTerm.app'
-            assert info['type'] == 'xterm-256color'
-            assert info['size'] == {'columns': 120, 'rows': 40}
-            assert info['encoding'] == 'utf-8'
-            assert info['is_tty'] is True
-            assert info['is_tmux'] is True
-            assert info['is_ssh'] is True
-            assert info['platform'] == sys.platform
+            assert info["program"] == "iTerm.app"
+            assert info["type"] == "xterm-256color"
+            assert info["size"] == {"columns": 120, "rows": 40}
+            assert info["encoding"] == "utf-8"
+            assert info["is_tty"] is True
+            assert info["is_tmux"] is True
+            assert info["is_ssh"] is True
+            assert info["platform"] == sys.platform
 
     def test_get_terminal_info_convenience(self):
         """Test get_terminal_info convenience function."""
         info = get_terminal_info()
         assert isinstance(info, dict)
-        assert 'program' in info
-        assert 'size' in info
+        assert "program" in info
+        assert "size" in info
 
 
 class TestProgressInTitle:
     """Test progress display in terminal title."""
 
-    @patch('chuk_term.ui.terminal.TerminalManager.set_title')
+    @patch("chuk_term.ui.terminal.TerminalManager.set_title")
     def test_set_title_progress_basic(self, mock_set_title):
         """Test basic progress in title."""
         TerminalManager.set_title_progress(50)
@@ -815,7 +825,7 @@ class TestProgressInTitle:
         assert "50%" in title
         assert "Progress" in title
 
-    @patch('chuk_term.ui.terminal.TerminalManager.set_title')
+    @patch("chuk_term.ui.terminal.TerminalManager.set_title")
     def test_set_title_progress_custom_prefix(self, mock_set_title):
         """Test progress with custom prefix."""
         TerminalManager.set_title_progress(75, "Download")
@@ -823,7 +833,7 @@ class TestProgressInTitle:
         assert "75%" in title
         assert "Download" in title
 
-    @patch('chuk_term.ui.terminal.TerminalManager.set_title')
+    @patch("chuk_term.ui.terminal.TerminalManager.set_title")
     def test_set_title_progress_clamping(self, mock_set_title):
         """Test progress value clamping."""
         # Test over 100
@@ -836,7 +846,7 @@ class TestProgressInTitle:
         title = mock_set_title.call_args[0][0]
         assert "0%" in title
 
-    @patch('chuk_term.ui.terminal.TerminalManager.set_title')
+    @patch("chuk_term.ui.terminal.TerminalManager.set_title")
     def test_set_title_progress_bar(self, mock_set_title):
         """Test progress bar visualization."""
         # Test 0%
@@ -859,10 +869,10 @@ class TestProgressInTitle:
 class TestEnhancedFeatureEdgeCases:
     """Test edge cases and error handling for enhanced features."""
 
-    @patch('sys.platform', 'win32')
+    @patch("sys.platform", "win32")
     def test_windows_no_ansi(self):
         """Test that Windows doesn't use ANSI codes."""
-        with patch('sys.stdout') as mock_stdout:
+        with patch("sys.stdout") as mock_stdout:
             TerminalManager.hide_cursor()
             TerminalManager.show_cursor()
             TerminalManager.save_cursor_position()
@@ -876,16 +886,16 @@ class TestEnhancedFeatureEdgeCases:
             # None of these should write on Windows
             mock_stdout.write.assert_not_called()
 
-    @patch('sys.stdout')
+    @patch("sys.stdout")
     def test_bell_always_works(self, mock_stdout):
         """Test bell works on all platforms."""
-        with patch('sys.platform', 'win32'):
+        with patch("sys.platform", "win32"):
             TerminalManager.bell()
-            mock_stdout.write.assert_called_with('\a')
+            mock_stdout.write.assert_called_with("\a")
 
-        with patch('sys.platform', 'linux'):
+        with patch("sys.platform", "linux"):
             TerminalManager.bell()
-            mock_stdout.write.assert_called_with('\a')
+            mock_stdout.write.assert_called_with("\a")
 
     def test_hyperlink_empty_url(self):
         """Test hyperlink with empty URL."""

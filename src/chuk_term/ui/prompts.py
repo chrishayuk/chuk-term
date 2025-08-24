@@ -19,7 +19,7 @@ from chuk_term.ui.output import get_output
 from chuk_term.ui.theme import get_theme
 
 ui = get_output()
-T = TypeVar('T')
+T = TypeVar("T")
 
 
 class PromptStyle:
@@ -34,25 +34,26 @@ class PromptStyle:
 
 def _get_key() -> str:
     """Get a single keypress from the user."""
-    if sys.platform == 'win32':
+    if sys.platform == "win32":
         import msvcrt
+
         key = msvcrt.getch()
-        if key in (b'\x00', b'\xe0'):  # Special keys (arrows, etc.)
+        if key in (b"\x00", b"\xe0"):  # Special keys (arrows, etc.)
             key = msvcrt.getch()
             return {
-                b'H': 'up',
-                b'P': 'down',
-                b'M': 'right',
-                b'K': 'left',
-            }.get(key, key.decode('utf-8', errors='ignore'))
-        elif key == b'\r':
-            return 'enter'
-        elif key == b' ':
-            return 'space'
-        elif key == b'\x03':
+                b"H": "up",
+                b"P": "down",
+                b"M": "right",
+                b"K": "left",
+            }.get(key, key.decode("utf-8", errors="ignore"))
+        elif key == b"\r":
+            return "enter"
+        elif key == b" ":
+            return "space"
+        elif key == b"\x03":
             raise KeyboardInterrupt
         else:
-            return key.decode('utf-8', errors='ignore')
+            return key.decode("utf-8", errors="ignore")
     else:
         # Unix/Linux/Mac
         fd = sys.stdin.fileno()
@@ -61,23 +62,23 @@ def _get_key() -> str:
             tty.setraw(sys.stdin.fileno())
             key = sys.stdin.read(1)
 
-            if key == '\x1b':  # ESC sequence
+            if key == "\x1b":  # ESC sequence
                 key2 = sys.stdin.read(1)
-                if key2 == '[':
+                if key2 == "[":
                     key3 = sys.stdin.read(1)
                     return {
-                        'A': 'up',
-                        'B': 'down',
-                        'C': 'right',
-                        'D': 'left',
+                        "A": "up",
+                        "B": "down",
+                        "C": "right",
+                        "D": "left",
                     }.get(key3, key3)
-            elif key == '\r' or key == '\n':
-                return 'enter'
-            elif key == ' ':
-                return 'space'
-            elif key == '\x03':  # Ctrl+C
+            elif key == "\r" or key == "\n":
+                return "enter"
+            elif key == " ":
+                return "space"
+            elif key == "\x03":  # Ctrl+C
                 raise KeyboardInterrupt
-            elif key == '\x04':  # Ctrl+D
+            elif key == "\x04":  # Ctrl+D
                 raise EOFError
             else:
                 return key
@@ -93,11 +94,11 @@ def ask(
     choices: list[str] | None = None,
     show_default: bool = True,
     show_choices: bool = True,
-    style: str = PromptStyle.DEFAULT
+    style: str = PromptStyle.DEFAULT,
 ) -> str:
     """
     Ask user for text input.
-    
+
     Args:
         message: Prompt message
         default: Default value
@@ -106,7 +107,7 @@ def ask(
         show_default: Show default value in prompt
         show_choices: Show available choices
         style: Prompt style
-        
+
     Returns:
         User input
     """
@@ -122,7 +123,7 @@ def ask(
                 choices=choices,
                 show_default=show_default,
                 show_choices=show_choices,
-                console=ui.get_raw_console()
+                console=ui.get_raw_console(),
             )
         else:
             # For other themes, use styled prompt
@@ -134,7 +135,7 @@ def ask(
                 choices=choices,
                 show_default=show_default,
                 show_choices=show_choices,
-                console=ui.get_raw_console()
+                console=ui.get_raw_console(),
             )
 
         # Handle None result (e.g., from Ctrl+D)
@@ -151,20 +152,15 @@ def ask(
         return ""
 
 
-def confirm(
-    message: str,
-    *,
-    default: bool = False,
-    style: str = PromptStyle.DEFAULT
-) -> bool:
+def confirm(message: str, *, default: bool = False, style: str = PromptStyle.DEFAULT) -> bool:
     """
     Ask user for yes/no confirmation.
-    
+
     Args:
         message: Confirmation message
         default: Default value
         style: Prompt style
-        
+
     Returns:
         True if confirmed
     """
@@ -173,20 +169,12 @@ def confirm(
     try:
         # For minimal theme, use plain prompt
         if theme.name == "minimal":
-            return Confirm.ask(
-                message,
-                default=default,
-                console=ui.get_raw_console()
-            )
+            return Confirm.ask(message, default=default, console=ui.get_raw_console())
 
         # For other themes, use styled prompt
         formatted_message = f"{style}{message}[/]"
 
-        return Confirm.ask(
-            formatted_message,
-            default=default,
-            console=ui.get_raw_console()
-        )
+        return Confirm.ask(formatted_message, default=default, console=ui.get_raw_console())
     except (KeyboardInterrupt, EOFError):
         return default
 
@@ -198,11 +186,11 @@ def ask_number(
     min_value: float | None = None,
     max_value: float | None = None,
     integer: bool = False,
-    style: str = PromptStyle.DEFAULT
+    style: str = PromptStyle.DEFAULT,
 ) -> float:
     """
     Ask user for numeric input.
-    
+
     Args:
         message: Prompt message
         default: Default value
@@ -210,27 +198,20 @@ def ask_number(
         max_value: Maximum allowed value
         integer: Require integer input
         style: Prompt style
-        
+
     Returns:
         Numeric value
     """
     theme = get_theme()
 
     # Format message based on theme
-    if theme.name == "minimal":
-        formatted_message = message
-    else:
-        formatted_message = f"{style}{message}[/]"
+    formatted_message = message if theme.name == "minimal" else f"{style}{message}[/]"
 
     prompt_class = IntPrompt if integer else FloatPrompt
 
     while True:
         try:
-            value = prompt_class.ask(
-                formatted_message,
-                default=default,
-                console=ui.get_raw_console()
-            )
+            value = prompt_class.ask(formatted_message, default=default, console=ui.get_raw_console())
 
             if value is None and default is not None:
                 return default
@@ -259,13 +240,13 @@ def select_from_list(
     default: str | None = None,
     allow_custom: bool = False,
     style: str = PromptStyle.DEFAULT,
-    use_arrow_keys: bool = True
+    use_arrow_keys: bool = True,
 ) -> str:
     """
     Ask user to select from a list of choices.
-    
+
     Supports arrow key navigation for compatible terminals.
-    
+
     Args:
         message: Prompt message
         choices: List of choices
@@ -273,7 +254,7 @@ def select_from_list(
         allow_custom: Allow custom input not in choices
         style: Prompt style
         use_arrow_keys: Enable arrow key navigation when possible
-        
+
     Returns:
         Selected choice
     """
@@ -286,7 +267,7 @@ def select_from_list(
     if use_arrow_keys and not allow_custom and theme.name not in ("minimal",) and sys.stdin.isatty():
         try:
             # Check if we're not on Windows without msvcrt
-            if sys.platform != 'win32' or 'msvcrt' in sys.modules:
+            if sys.platform != "win32" or "msvcrt" in sys.modules:
                 return _interactive_select(message, choices, default=default, style=style)
         except Exception:
             # Fall back to manual selection
@@ -310,11 +291,7 @@ def select_from_list(
 
     # Get selection
     while True:
-        response = ask(
-            "Enter choice number or value",
-            default=default,
-            style=style
-        )
+        response = ask("Enter choice number or value", default=default, style=style)
 
         if not response and default:
             return default
@@ -339,21 +316,17 @@ def select_from_list(
 
 
 def _interactive_select(
-    message: str,
-    choices: list[str],
-    *,
-    default: str | None = None,
-    style: str = PromptStyle.DEFAULT
+    message: str, choices: list[str], *, default: str | None = None, style: str = PromptStyle.DEFAULT
 ) -> str:
     """
     Interactive single selection with arrow keys.
-    
+
     Args:
         message: Prompt message
         choices: List of choices
         default: Default choice
         style: Prompt style
-        
+
     Returns:
         Selected choice
     """
@@ -365,7 +338,7 @@ def _interactive_select(
         current_index = choices.index(default)
 
     # Hide cursor
-    sys.stdout.write('\033[?25l')
+    sys.stdout.write("\033[?25l")
     sys.stdout.flush()
 
     try:
@@ -377,16 +350,16 @@ def _interactive_select(
             ui.print("[dim]Use ↑↓ arrows to navigate, Enter to select[/dim]")
 
         # Save cursor position
-        sys.stdout.write('\033[s')
+        sys.stdout.write("\033[s")
         sys.stdout.flush()
 
         while True:
             # Clear and redraw options
-            sys.stdout.write('\033[u')  # Restore cursor position
+            sys.stdout.write("\033[u")  # Restore cursor position
 
             for i, choice in enumerate(choices):
                 # Clear line first
-                sys.stdout.write('\033[K')
+                sys.stdout.write("\033[K")
 
                 if i == current_index:
                     if theme.name == "terminal":
@@ -401,28 +374,28 @@ def _interactive_select(
             # Get key input
             key = _get_key()
 
-            if key == 'up' or key == 'k':
+            if key == "up" or key == "k":
                 current_index = (current_index - 1) % len(choices)
-            elif key == 'down' or key == 'j':
+            elif key == "down" or key == "j":
                 current_index = (current_index + 1) % len(choices)
-            elif key == 'enter':
+            elif key == "enter":
                 break
             elif key.isdigit() and 1 <= int(key) <= len(choices):
                 # Allow number selection too
                 current_index = int(key) - 1
                 break
-            elif key == 'q':
+            elif key == "q":
                 raise KeyboardInterrupt
 
     finally:
         # Show cursor
-        sys.stdout.write('\033[?25h')
+        sys.stdout.write("\033[?25h")
         # Clear selection display
-        sys.stdout.write('\033[u')
+        sys.stdout.write("\033[u")
         for _ in range(len(choices)):
-            sys.stdout.write('\033[K')
-            sys.stdout.write('\033[B')
-        sys.stdout.write('\033[u')
+            sys.stdout.write("\033[K")
+            sys.stdout.write("\033[B")
+        sys.stdout.write("\033[u")
         sys.stdout.flush()
 
     # Show final selection
@@ -439,14 +412,14 @@ def select_multiple(
     min_selections: int = 0,
     max_selections: int | None = None,
     style: str = PromptStyle.DEFAULT,
-    use_arrow_keys: bool = True
+    use_arrow_keys: bool = True,
 ) -> list[str]:
     """
     Ask user to select multiple items from a list.
-    
+
     Interactive checkbox-style selection with arrow keys for rich themes.
     Number-based selection for minimal/terminal themes.
-    
+
     Args:
         message: Prompt message
         choices: List of choices
@@ -455,7 +428,7 @@ def select_multiple(
         max_selections: Maximum number of selections
         style: Prompt style
         use_arrow_keys: Enable arrow key navigation when possible
-        
+
     Returns:
         List of selected choices
     """
@@ -468,13 +441,14 @@ def select_multiple(
     if use_arrow_keys and theme.name not in ("minimal",) and sys.stdin.isatty():
         try:
             # Check if we're not on Windows without msvcrt
-            if sys.platform != 'win32' or 'msvcrt' in sys.modules:
+            if sys.platform != "win32" or "msvcrt" in sys.modules:
                 return _interactive_multi_select(
-                    message, choices,
+                    message,
+                    choices,
                     default=default,
                     min_selections=min_selections,
                     max_selections=max_selections,
-                    style=style
+                    style=style,
                 )
         except Exception:
             # Fall back to manual selection
@@ -520,11 +494,7 @@ def select_multiple(
             ui.print(f"\n[dim]Currently selected: {len(selected)}[/dim]")
 
         # Get input
-        response = ask(
-            "Toggle items (or Enter to confirm)",
-            default="",
-            style=style
-        )
+        response = ask("Toggle items (or Enter to confirm)", default="", style=style)
 
         # Handle special commands
         if response.lower() == "done" or not response:
@@ -548,7 +518,7 @@ def select_multiple(
         # Process number input
         try:
             # Handle multiple numbers separated by spaces or commas
-            numbers = response.replace(',', ' ').split()
+            numbers = response.replace(",", " ").split()
 
             for num_str in numbers:
                 num_str = num_str.strip()
@@ -556,9 +526,9 @@ def select_multiple(
                     continue
 
                 # Handle ranges like "1-3"
-                if '-' in num_str and num_str[0] != '-':
+                if "-" in num_str and num_str[0] != "-":
                     try:
-                        start, end = num_str.split('-')
+                        start, end = num_str.split("-")
                         for n in range(int(start), int(end) + 1):
                             if 0 <= n - 1 < len(choices):
                                 choice = choices[n - 1]
@@ -600,11 +570,11 @@ def _interactive_multi_select(
     default: list[str] | None = None,
     min_selections: int = 0,
     max_selections: int | None = None,
-    style: str = PromptStyle.DEFAULT
+    style: str = PromptStyle.DEFAULT,
 ) -> list[str]:
     """
     Interactive multiple selection with arrow keys and space to toggle.
-    
+
     Args:
         message: Prompt message
         choices: List of choices
@@ -612,7 +582,7 @@ def _interactive_multi_select(
         min_selections: Minimum number of selections
         max_selections: Maximum number of selections
         style: Prompt style
-        
+
     Returns:
         List of selected choices
     """
@@ -621,7 +591,7 @@ def _interactive_multi_select(
     current_index = 0
 
     # Hide cursor
-    sys.stdout.write('\033[?25l')
+    sys.stdout.write("\033[?25l")
     sys.stdout.flush()
 
     try:
@@ -638,16 +608,16 @@ def _interactive_multi_select(
                 ui.print(f"[dim]Maximum selections: {max_selections}[/dim]")
 
         # Save cursor position
-        sys.stdout.write('\033[s')
+        sys.stdout.write("\033[s")
         sys.stdout.flush()
 
         while True:
             # Clear and redraw options
-            sys.stdout.write('\033[u')  # Restore cursor position
+            sys.stdout.write("\033[u")  # Restore cursor position
 
             for i, choice in enumerate(choices):
                 # Clear line
-                sys.stdout.write('\033[K')
+                sys.stdout.write("\033[K")
 
                 if theme.name == "terminal":
                     checkbox = "[✓]" if choice in selected else "[ ]"
@@ -663,7 +633,7 @@ def _interactive_multi_select(
                     ui.print(f"    {checkbox} {choice}")
 
             # Show current selection count
-            sys.stdout.write('\033[K')
+            sys.stdout.write("\033[K")
             if theme.name == "minimal":
                 ui.print(f"\nSelected: {len(selected)}")
             else:
@@ -674,53 +644,53 @@ def _interactive_multi_select(
             # Get key input
             key = _get_key()
 
-            if key == 'up' or key == 'k':
+            if key == "up" or key == "k":
                 current_index = (current_index - 1) % len(choices)
-            elif key == 'down' or key == 'j':
+            elif key == "down" or key == "j":
                 current_index = (current_index + 1) % len(choices)
-            elif key == 'space':
+            elif key == "space":
                 choice = choices[current_index]
                 if choice in selected:
                     selected.remove(choice)
                 else:
                     if max_selections and len(selected) >= max_selections:
                         # Flash warning
-                        sys.stdout.write('\033[u')
-                        sys.stdout.write(f'\033[{len(choices) + 1}B')
-                        sys.stdout.write('\033[K')
+                        sys.stdout.write("\033[u")
+                        sys.stdout.write(f"\033[{len(choices) + 1}B")
+                        sys.stdout.write("\033[K")
                         ui.warning(f"Maximum {max_selections} selections allowed")
                         time.sleep(1)
                     else:
                         selected.add(choice)
-            elif key == 'enter':
+            elif key == "enter":
                 if len(selected) < min_selections:
                     # Flash warning
-                    sys.stdout.write('\033[u')
-                    sys.stdout.write(f'\033[{len(choices) + 1}B')
-                    sys.stdout.write('\033[K')
+                    sys.stdout.write("\033[u")
+                    sys.stdout.write(f"\033[{len(choices) + 1}B")
+                    sys.stdout.write("\033[K")
                     ui.warning(f"Please select at least {min_selections} items")
                     time.sleep(1)
                 else:
                     break
-            elif key == 'a':  # Select all
+            elif key == "a":  # Select all
                 if max_selections and len(choices) > max_selections:
                     pass  # Can't select all
                 else:
                     selected = set(choices)
-            elif key == 'n':  # Select none
+            elif key == "n":  # Select none
                 selected = set()
-            elif key == 'q':
+            elif key == "q":
                 raise KeyboardInterrupt
 
     finally:
         # Show cursor
-        sys.stdout.write('\033[?25h')
+        sys.stdout.write("\033[?25h")
         # Clear selection display
-        sys.stdout.write('\033[u')
+        sys.stdout.write("\033[u")
         for _ in range(len(choices) + 2):  # +2 for status line and spacing
-            sys.stdout.write('\033[K')
-            sys.stdout.write('\033[B')
-        sys.stdout.write('\033[u')
+            sys.stdout.write("\033[K")
+            sys.stdout.write("\033[B")
+        sys.stdout.write("\033[u")
         sys.stdout.flush()
 
     # Show final selection
@@ -733,23 +703,20 @@ def _interactive_multi_select(
     return selected_list
 
 
-def prompt_for_tool_confirmation(
-    tool_name: str,
-    arguments: dict[str, Any],
-    description: str | None = None
-) -> bool:
+def prompt_for_tool_confirmation(tool_name: str, arguments: dict[str, Any], description: str | None = None) -> bool:
     """
     Prompt for tool execution confirmation.
-    
+
     Args:
         tool_name: Name of the tool
         arguments: Tool arguments
         description: Tool description
-        
+
     Returns:
         True if user confirms execution
     """
     import json
+
     theme = get_theme()
 
     # Build confirmation message
@@ -774,26 +741,18 @@ def prompt_for_tool_confirmation(
         except Exception:
             ui.print(f"Arguments: {arguments}")
 
-    return confirm(
-        "Execute this tool?",
-        default=True,
-        style=PromptStyle.WARNING
-    )
+    return confirm("Execute this tool?", default=True, style=PromptStyle.WARNING)
 
 
-def prompt_for_retry(
-    error: Exception,
-    attempt: int,
-    max_attempts: int
-) -> bool:
+def prompt_for_retry(error: Exception, attempt: int, max_attempts: int) -> bool:
     """
     Prompt user to retry after an error.
-    
+
     Args:
         error: The error that occurred
         attempt: Current attempt number
         max_attempts: Maximum attempts allowed
-        
+
     Returns:
         True if user wants to retry
     """
@@ -803,11 +762,7 @@ def prompt_for_retry(
         ui.info("Maximum attempts reached")
         return False
 
-    return confirm(
-        f"Retry? ({max_attempts - attempt} attempts remaining)",
-        default=True,
-        style=PromptStyle.WARNING
-    )
+    return confirm(f"Retry? ({max_attempts - attempt} attempts remaining)", default=True, style=PromptStyle.WARNING)
 
 
 def create_menu(
@@ -816,18 +771,18 @@ def create_menu(
     *,
     back_option: bool = True,
     quit_option: bool = True,
-    use_arrow_keys: bool = True
+    use_arrow_keys: bool = True,
 ) -> str:
     """
     Create and display an interactive menu.
-    
+
     Args:
         title: Menu title
         options: Dictionary of option_key -> description
         back_option: Include "Back" option
         quit_option: Include "Quit" option
         use_arrow_keys: Enable arrow key navigation when possible
-        
+
     Returns:
         Selected option key
     """
@@ -845,7 +800,7 @@ def create_menu(
     if use_arrow_keys and theme.name not in ("minimal",) and sys.stdin.isatty():
         try:
             # Check if we're not on Windows without msvcrt
-            if sys.platform != 'win32' or 'msvcrt' in sys.modules:
+            if sys.platform != "win32" or "msvcrt" in sys.modules:
                 # Create choice strings for interactive selection
                 choice_strings = [f"[{i}] {key} - {desc}" for i, (key, desc) in enumerate(menu_options, 1)]
                 selected = _interactive_select(title, choice_strings)

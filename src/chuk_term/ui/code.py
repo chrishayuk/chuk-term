@@ -23,16 +23,16 @@ def display_code(
     line_numbers: bool = True,
     theme_name: str | None = None,
     start_line: int = 1,
-    highlight_lines: list[int] | None = None
+    highlight_lines: list[int] | None = None,
 ) -> None:
     """
     Display formatted code with syntax highlighting.
-    
+
     Automatically adapts to the current theme:
     - Rich themes: Full syntax highlighting with colors
     - Terminal theme: Basic formatting
     - Minimal theme: Plain text with simple structure
-    
+
     Args:
         code: Code to display
         language: Programming language for syntax highlighting
@@ -51,7 +51,7 @@ def display_code(
             ui.print("-" * len(title))
 
         if line_numbers:
-            lines = code.split('\n')
+            lines = code.split("\n")
             width = len(str(start_line + len(lines) - 1))
             for i, line in enumerate(lines, start_line):
                 ui.print(f"{i:>{width}} | {line}")
@@ -65,11 +65,11 @@ def display_code(
             ui.print("-" * (len(title) + 2))
 
         if line_numbers:
-            lines = code.split('\n')
+            lines = code.split("\n")
             width = len(str(start_line + len(lines) - 1))
             for i, line in enumerate(lines, start_line):
                 # Basic highlighting for comments
-                if line.strip().startswith('#') or line.strip().startswith('//'):
+                if line.strip().startswith("#") or line.strip().startswith("//"):
                     ui.print(f"[dim]{i:>{width}} | {line}[/dim]")
                 else:
                     ui.print(f"{i:>{width}} | {line}")
@@ -91,7 +91,7 @@ def display_code(
             line_numbers=line_numbers,
             start_line=start_line,
             highlight_lines=set(highlight_lines) if highlight_lines else None,
-            word_wrap=False
+            word_wrap=False,
         )
         ui.print(syntax)
 
@@ -103,16 +103,16 @@ def display_diff(
     title: str | None = None,
     file_path: str | None = None,
     context_lines: int = 3,
-    syntax: str | None = None
+    syntax: str | None = None,  # noqa: ARG001
 ) -> None:
     """
     Display a diff between two strings.
-    
+
     Automatically adapts to the current theme:
     - Rich themes: Colored diff with +/- indicators
     - Terminal theme: Basic diff with +/- prefixes
     - Minimal theme: Plain unified diff format
-    
+
     Args:
         old: Original text
         new: New text
@@ -122,6 +122,7 @@ def display_diff(
         syntax: Language for syntax highlighting in diff
     """
     import difflib
+
     theme = get_theme()
 
     # Generate unified diff
@@ -129,11 +130,7 @@ def display_diff(
     new_lines = new.splitlines(keepends=True)
 
     diff = difflib.unified_diff(
-        old_lines,
-        new_lines,
-        fromfile=file_path or "old",
-        tofile=file_path or "new",
-        n=context_lines
+        old_lines, new_lines, fromfile=file_path or "old", tofile=file_path or "new", n=context_lines
     )
 
     diff_text = "".join(diff)
@@ -155,11 +152,11 @@ def display_diff(
             ui.print(f"\n[{title}]")
 
         for line in diff_text.splitlines():
-            if line.startswith('+'):
+            if line.startswith("+"):
                 ui.print(f"[green]{line}[/green]")
-            elif line.startswith('-'):
+            elif line.startswith("-"):
                 ui.print(f"[red]{line}[/red]")
-            elif line.startswith('@'):
+            elif line.startswith("@"):
                 ui.print(f"[cyan]{line}[/cyan]")
             else:
                 ui.print(line)
@@ -169,25 +166,17 @@ def display_diff(
         from rich.syntax import Syntax
 
         if title:
-            ui.panel(
-                Syntax(diff_text, "diff", theme="monokai", line_numbers=True),
-                title=title,
-                style="blue"
-            )
+            ui.panel(Syntax(diff_text, "diff", theme="monokai", line_numbers=True), title=title, style="blue")
         else:
             ui.print(Syntax(diff_text, "diff", theme="monokai", line_numbers=True))
 
 
 def display_code_review(
-    code: str,
-    comments: list[dict[str, Any]],
-    *,
-    title: str = "Code Review",
-    language: str = "python"
+    code: str, comments: list[dict[str, Any]], *, title: str = "Code Review", language: str = "python"
 ) -> None:
     """
     Display code with review comments.
-    
+
     Args:
         code: Code being reviewed
         comments: List of comment dicts with keys:
@@ -212,22 +201,19 @@ def display_code_review(
         for comment in comments:
             ui.print(f"\nLine {comment['line']}: {comment['type'].upper()}")
             ui.print(f"  {comment['message']}")
-            if comment.get('suggestion'):
+            if comment.get("suggestion"):
                 ui.print(f"  Suggestion: {comment['suggestion']}")
 
     elif theme.name == "terminal":
         ui.print("[bold]Review Comments:[/bold]")
         for comment in comments:
-            color = {
-                "error": "red",
-                "warning": "yellow",
-                "info": "cyan",
-                "suggestion": "green"
-            }.get(comment['type'], "white")
+            color = {"error": "red", "warning": "yellow", "info": "cyan", "suggestion": "green"}.get(
+                comment["type"], "white"
+            )
 
             ui.print(f"\n[{color}]Line {comment['line']}: {comment['type'].title()}[/{color}]")
             ui.print(f"  {comment['message']}")
-            if comment.get('suggestion'):
+            if comment.get("suggestion"):
                 ui.print(f"  [dim]→ {comment['suggestion']}[/dim]")
 
     else:
@@ -244,27 +230,24 @@ def display_code_review(
                 "error": "[red]❌ Error[/red]",
                 "warning": "[yellow]⚠️ Warning[/yellow]",
                 "info": "[cyan]ℹ️ Info[/cyan]",
-                "suggestion": "[green]💡 Suggestion[/green]"
-            }.get(comment['type'], comment['type'])
+                "suggestion": "[green]💡 Suggestion[/green]",
+            }.get(comment["type"], comment["type"])
 
-            message = comment['message']
-            if comment.get('suggestion'):
+            message = comment["message"]
+            if comment.get("suggestion"):
                 message += f"\n[dim]→ {comment['suggestion']}[/dim]"
 
-            table.add_row(str(comment['line']), type_display, message)
+            table.add_row(str(comment["line"]), type_display, message)
 
         ui.print(table)
 
 
 def display_code_analysis(
-    metrics: dict[str, Any],
-    *,
-    title: str = "Code Analysis",
-    show_recommendations: bool = True
+    metrics: dict[str, Any], *, title: str = "Code Analysis", show_recommendations: bool = True
 ) -> None:
     """
     Display code analysis metrics and results.
-    
+
     Args:
         metrics: Dictionary of analysis metrics, e.g.:
             - lines: Total lines of code
@@ -316,24 +299,24 @@ def display_code_analysis(
 
         # Process metrics
         for key, value in metrics.items():
-            if key == "complexity" and isinstance(value, (int, float)):
+            if key == "complexity" and isinstance(value, int | float):
                 status = "🟢 Good" if value < 10 else "🟡 Medium" if value < 20 else "🔴 High"
                 table.add_row("Complexity", str(value), status)
 
-            elif key == "coverage" and isinstance(value, (int, float)):
+            elif key == "coverage" and isinstance(value, int | float):
                 status = "🟢 Good" if value > 80 else "🟡 Fair" if value > 60 else "🔴 Low"
                 table.add_row("Coverage", f"{value}%", status)
 
             elif key == "issues" and isinstance(value, list):
-                high = sum(1 for i in value if i.get('severity') == 'high')
-                medium = sum(1 for i in value if i.get('severity') == 'medium')
-                low = sum(1 for i in value if i.get('severity') == 'low')
+                high = sum(1 for i in value if i.get("severity") == "high")
+                medium = sum(1 for i in value if i.get("severity") == "medium")
+                low = sum(1 for i in value if i.get("severity") == "low")
 
                 issue_str = f"H:{high} M:{medium} L:{low}"
                 status = "🟢 Clean" if high == 0 and medium < 3 else "🟡 Review" if high < 3 else "🔴 Critical"
                 table.add_row("Issues", issue_str, status)
 
-            elif not isinstance(value, (dict, list)):
+            elif not isinstance(value, dict | list):
                 table.add_row(key.title(), str(value), "")
 
         ui.print(table)
@@ -349,18 +332,18 @@ def _show_recommendations(metrics: dict[str, Any]) -> None:
     # Check complexity
     if "complexity" in metrics:
         complexity = metrics["complexity"]
-        if isinstance(complexity, (int, float)) and complexity > 15:
+        if isinstance(complexity, int | float) and complexity > 15:
             recommendations.append("Consider refactoring complex functions to improve maintainability")
 
     # Check coverage
     if "coverage" in metrics:
         coverage = metrics["coverage"]
-        if isinstance(coverage, (int, float)) and coverage < 70:
+        if isinstance(coverage, int | float) and coverage < 70:
             recommendations.append(f"Increase test coverage (currently {coverage}%)")
 
     # Check issues
     if "issues" in metrics and isinstance(metrics["issues"], list):
-        high_issues = sum(1 for i in metrics["issues"] if i.get('severity') == 'high')
+        high_issues = sum(1 for i in metrics["issues"] if i.get("severity") == "high")
         if high_issues > 0:
             recommendations.append(f"Address {high_issues} high-severity issues")
 
@@ -384,13 +367,13 @@ def display_side_by_side(
     left_title: str = "Before",
     right_title: str = "After",
     language: str = "python",
-    highlight_changes: bool = True
+    highlight_changes: bool = True,  # noqa: ARG001
 ) -> None:
     """
     Display two code blocks side by side for comparison.
-    
+
     Note: For terminal/minimal themes, displays sequentially instead.
-    
+
     Args:
         left_code: Left side code
         right_code: Right side code
@@ -427,19 +410,15 @@ def display_side_by_side(
         ui.print(table)
 
 
-def format_code_snippet(
-    code: str,
-    language: str = "python",
-    inline: bool = False
-) -> str:
+def format_code_snippet(code: str, language: str = "python", inline: bool = False) -> str:
     """
     Format a code snippet for inline display.
-    
+
     Args:
         code: Code snippet
         language: Programming language
         inline: Format for inline display
-        
+
     Returns:
         Formatted code string
     """
@@ -458,15 +437,11 @@ def format_code_snippet(
 
 
 def display_file_tree(
-    tree_data: dict[str, Any],
-    *,
-    title: str = "File Structure",
-    show_sizes: bool = False,
-    show_icons: bool = True
+    tree_data: dict[str, Any], *, title: str = "File Structure", show_sizes: bool = False, show_icons: bool = True
 ) -> None:
     """
     Display a file/directory tree structure.
-    
+
     Args:
         tree_data: Nested dict representing the tree
         title: Tree title

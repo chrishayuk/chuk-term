@@ -20,45 +20,21 @@ ui = get_output()
 class BannerStyle:
     """Banner style configurations."""
 
-    CHAT = {
-        "title": "Welcome to MCP CLI Chat",
-        "style": "yellow",
-        "icon": "💬"
-    }
+    CHAT = {"title": "Welcome to MCP CLI Chat", "style": "yellow", "icon": "💬"}
 
-    INTERACTIVE = {
-        "title": "MCP CLI Interactive Mode",
-        "style": "cyan",
-        "icon": "⚡"
-    }
+    INTERACTIVE = {"title": "MCP CLI Interactive Mode", "style": "cyan", "icon": "⚡"}
 
-    DIAGNOSTIC = {
-        "title": "MCP CLI Diagnostic Mode",
-        "style": "magenta",
-        "icon": "🔍"
-    }
+    DIAGNOSTIC = {"title": "MCP CLI Diagnostic Mode", "style": "magenta", "icon": "🔍"}
 
-    ERROR = {
-        "title": "Error",
-        "style": "red",
-        "icon": "❌"
-    }
+    ERROR = {"title": "Error", "style": "red", "icon": "❌"}
 
-    SUCCESS = {
-        "title": "Success",
-        "style": "green",
-        "icon": "✅"
-    }
+    SUCCESS = {"title": "Success", "style": "green", "icon": "✅"}
 
 
-def display_chat_banner(
-    provider: str,
-    model: str,
-    additional_info: dict[str, Any] | None = None
-) -> None:
+def display_chat_banner(provider: str, model: str, additional_info: dict[str, Any] | None = None) -> None:
     """
     Display welcome banner for chat mode.
-    
+
     Args:
         provider: LLM provider name
         model: Model name
@@ -89,30 +65,22 @@ def display_chat_banner(
         provider=provider,
         model=model,
         instructions="Enter a **prompt** and press RETURN. Type **`exit`** to quit or **`/help`** for commands.",
-        additional_info=additional_info
+        additional_info=additional_info,
     )
 
     style = BannerStyle.CHAT
     icon = theme.icons.chat if theme.should_show_icons() else ""
-    title = f"{icon} {style['title']}" if icon else style['title']
+    title = f"{icon} {style['title']}" if icon else style["title"]
 
-    ui.panel(
-        content,
-        title=title,
-        style=style["style"],
-        force=True
-    )
+    ui.panel(content, title=title, style=style["style"], force=True)
 
 
 def display_interactive_banner(
-    provider: str,
-    model: str,
-    tool_count: int | None = None,
-    server_count: int | None = None
+    provider: str, model: str, tool_count: int | None = None, server_count: int | None = None
 ) -> None:
     """
     Display welcome banner for interactive mode.
-    
+
     Args:
         provider: LLM provider name
         model: Model name
@@ -149,29 +117,20 @@ def display_interactive_banner(
         provider=provider,
         model=model,
         instructions="Type **`help`** for available commands or **`exit`** to quit.",
-        additional_info=additional_info
+        additional_info=additional_info,
     )
 
     style = BannerStyle.INTERACTIVE
     icon = theme.icons.interactive if theme.should_show_icons() else ""
-    title = f"{icon} {style['title']}" if icon else style['title']
+    title = f"{icon} {style['title']}" if icon else style["title"]
 
-    ui.panel(
-        content,
-        title=title,
-        style=style["style"],
-        force=True
-    )
+    ui.panel(content, title=title, style=style["style"], force=True)
 
 
-def display_diagnostic_banner(
-    test_name: str,
-    description: str,
-    parameters: dict[str, Any] | None = None
-) -> None:
+def display_diagnostic_banner(test_name: str, description: str, parameters: dict[str, Any] | None = None) -> None:
     """
     Display banner for diagnostic mode.
-    
+
     Args:
         test_name: Name of the diagnostic test
         description: Test description
@@ -200,10 +159,7 @@ def display_diagnostic_banner(
         return
 
     # Rich mode
-    content_parts = [
-        f"**Test:** {test_name}",
-        f"**Description:** {description}"
-    ]
+    content_parts = [f"**Test:** {test_name}", f"**Description:** {description}"]
 
     if parameters:
         params_str = ", ".join(f"{k}={v}" for k, v in parameters.items())
@@ -213,24 +169,15 @@ def display_diagnostic_banner(
 
     style = BannerStyle.DIAGNOSTIC
     icon = theme.icons.diagnostic if theme.should_show_icons() else ""
-    title = f"{icon} {style['title']}" if icon else style['title']
+    title = f"{icon} {style['title']}" if icon else style["title"]
 
-    ui.panel(
-        content,
-        title=title,
-        style=style["style"],
-        force=True
-    )
+    ui.panel(content, title=title, style=style["style"], force=True)
 
 
-def display_session_banner(
-    title: str,
-    session_info: dict[str, str],
-    style_name: str = "cyan"
-) -> None:
+def display_session_banner(title: str, session_info: dict[str, str], style_name: str = "cyan") -> None:
     """
     Display a session information banner.
-    
+
     Args:
         title: Banner title
         session_info: Dictionary of session information
@@ -262,22 +209,13 @@ def display_session_banner(
     for key, value in session_info.items():
         table.add_row(key, value)
 
-    ui.panel(
-        table,
-        title=title,
-        style=style_name,
-        force=True
-    )
+    ui.panel(table, title=title, style=style_name, force=True)
 
 
-def display_error_banner(
-    error: Exception,
-    context: str | None = None,
-    suggestions: list[str] | None = None
-) -> None:
+def display_error_banner(error: Exception, context: str | None = None, suggestions: list[str] | None = None) -> None:
     """
     Display an error banner.
-    
+
     Args:
         error: The exception that occurred
         context: Context about when/where the error occurred
@@ -324,23 +262,15 @@ def display_error_banner(
 
     style = BannerStyle.ERROR
     icon = theme.icons.error if theme.should_show_icons() else ""
-    title = f"{icon} {style['title']}" if icon else style['title']
+    title = f"{icon} {style['title']}" if icon else style["title"]
 
-    ui.panel(
-        content,
-        title=title,
-        style=style["style"],
-        force=True
-    )
+    ui.panel(content, title=title, style=style["style"], force=True)
 
 
-def display_success_banner(
-    message: str,
-    details: dict[str, Any] | None = None
-) -> None:
+def display_success_banner(message: str, details: dict[str, Any] | None = None) -> None:
     """
     Display a success banner.
-    
+
     Args:
         message: Success message
         details: Optional details about the success
@@ -375,37 +305,27 @@ def display_success_banner(
 
     style = BannerStyle.SUCCESS
     icon = theme.icons.success if theme.should_show_icons() else ""
-    title = f"{icon} {style['title']}" if icon else style['title']
+    title = f"{icon} {style['title']}" if icon else style["title"]
 
-    ui.panel(
-        content,
-        title=title,
-        style=style["style"],
-        force=True
-    )
+    ui.panel(content, title=title, style=style["style"], force=True)
 
 
 def _build_banner_content(
-    provider: str,
-    model: str,
-    instructions: str,
-    additional_info: dict[str, Any] | None = None
+    provider: str, model: str, instructions: str, additional_info: dict[str, Any] | None = None
 ) -> Markdown:
     """
     Build banner content with consistent formatting.
-    
+
     Args:
         provider: Provider name
         model: Model name
         instructions: Usage instructions
         additional_info: Additional key-value pairs to display
-        
+
     Returns:
         Formatted Markdown content
     """
-    content_parts = [
-        f"**Provider:** {provider}  |  **Model:** {model}"
-    ]
+    content_parts = [f"**Provider:** {provider}  |  **Model:** {model}"]
 
     if additional_info:
         info_parts = [f"**{k}:** {v}" for k, v in additional_info.items()]

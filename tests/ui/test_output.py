@@ -1,5 +1,7 @@
 """Unit tests for output management."""
 
+# ruff: noqa: ARG002
+
 from io import StringIO
 from unittest.mock import patch
 
@@ -363,19 +365,19 @@ class TestUtilityMethods:
         # Just test that it doesn't crash
         output.clear()
 
-    @patch('builtins.input', return_value="user input")
+    @patch("builtins.input", return_value="user input")
     def test_prompt(self, mock_input, output):
         """Test user prompt."""
         result = output.prompt("Enter value")
         assert result == "user input"
 
-    @patch('builtins.input', return_value="y")
+    @patch("builtins.input", return_value="y")
     def test_confirm(self, mock_input, output):
         """Test confirmation prompt."""
         result = output.confirm("Are you sure?")
         assert result is True
 
-    @patch('builtins.input', return_value="test value")
+    @patch("builtins.input", return_value="test value")
     def test_minimal_theme_prompt(self, mock_input, output):
         """Test prompt in minimal theme."""
         minimal_theme = Theme("minimal")
@@ -386,7 +388,7 @@ class TestUtilityMethods:
         mock_input.assert_called_with("Enter value [default]: ")
         assert result == "test value"
 
-    @patch('builtins.input', return_value="y")
+    @patch("builtins.input", return_value="y")
     def test_minimal_theme_confirm(self, mock_input, output):
         """Test confirm in minimal theme."""
         minimal_theme = Theme("minimal")
@@ -451,6 +453,7 @@ class TestErrorHandling:
 
     def test_tool_call_json_error_handling(self, output, capsys):
         """Test tool call handles non-JSON serializable arguments."""
+
         # Non-serializable object
         class NonSerializable:
             def __str__(self):
@@ -489,7 +492,7 @@ class TestThemeIntegration:
 class TestDelegatedMethods:
     """Test methods that delegate to formatters/code modules."""
 
-    @patch('chuk_term.ui.formatters.format_tree')
+    @patch("chuk_term.ui.formatters.format_tree")
     def test_tree_delegation(self, mock_format_tree, output):
         """Test that tree() delegates to format_tree."""
         mock_format_tree.return_value = "tree output"
@@ -499,7 +502,7 @@ class TestDelegatedMethods:
 
         mock_format_tree.assert_called_once_with(test_data, title="Test Tree")
 
-    @patch('chuk_term.ui.formatters.format_json')
+    @patch("chuk_term.ui.formatters.format_json")
     def test_json_delegation(self, mock_format_json, output):
         """Test that json() delegates to format_json."""
         mock_format_json.return_value = "json output"
@@ -509,15 +512,13 @@ class TestDelegatedMethods:
 
         mock_format_json.assert_called_once()
 
-    @patch('chuk_term.ui.code.display_code')
+    @patch("chuk_term.ui.code.display_code")
     def test_code_delegation(self, mock_display_code, output):
         """Test that code() delegates to display_code."""
         test_code = "print('hello')"
         output.code(test_code, language="python", line_numbers=True)
 
-        mock_display_code.assert_called_once_with(
-            test_code, "python", line_numbers=True
-        )
+        mock_display_code.assert_called_once_with(test_code, "python", line_numbers=True)
 
 
 class TestSimpleFormatting:
@@ -544,10 +545,7 @@ class TestSimpleFormatting:
 
     def test_list_items_checklist(self, output, capsys):
         """Test checklist formatting."""
-        items = [
-            {"text": "Task 1", "checked": True},
-            {"text": "Task 2", "checked": False}
-        ]
+        items = [{"text": "Task 1", "checked": True}, {"text": "Task 2", "checked": False}]
         output.list_items(items, style="check")
 
         captured = capsys.readouterr()
@@ -556,11 +554,7 @@ class TestSimpleFormatting:
 
     def test_kvpairs(self, output, capsys):
         """Test key-value pairs formatting."""
-        data = {
-            "Name": "Test",
-            "Version": "1.0",
-            "Status": "Active"
-        }
+        data = {"Name": "Test", "Version": "1.0", "Status": "Active"}
         output.kvpairs(data)
 
         captured = capsys.readouterr()
@@ -571,10 +565,7 @@ class TestSimpleFormatting:
 
     def test_columns(self, output, capsys):
         """Test column layout formatting."""
-        data = [
-            ["Alice", "Engineer"],
-            ["Bob", "Designer"]
-        ]
+        data = [["Alice", "Engineer"], ["Bob", "Designer"]]
         headers = ["Name", "Role"]
 
         output.columns(data, headers=headers)

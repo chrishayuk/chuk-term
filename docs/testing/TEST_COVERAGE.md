@@ -49,14 +49,14 @@ make check         # Run all checks including coverage
 
 | Module Category | Target Coverage | Priority | Current |
 |----------------|-----------------|----------|----------|
-| CLI Interface (`cli.py`) | 95% | Critical | TBD |
-| Output Management (`ui/output.py`) | 90% | Critical | 69% |
-| Terminal Management (`ui/terminal.py`) | 95% | High | 99% ✅ |
+| CLI Interface (`cli.py`) | 95% | Critical | 100% ✅ |
+| Output Management (`ui/output.py`) | 90% | Critical | 62% ⚠️ |
+| Terminal Management (`ui/terminal.py`) | 95% | High | 97% ✅ |
 | Theme System (`ui/theme.py`) | 90% | High | 98% ✅ |
-| Prompts (`ui/prompts.py`) | 85% | High | 82% |
-| Code Display (`ui/code.py`) | 85% | Medium | TBD |
-| Formatters (`ui/formatters.py`) | 80% | Medium | TBD |
-| Banners (`ui/banners.py`) | 75% | Low | TBD |
+| Prompts (`ui/prompts.py`) | 85% | High | 79% |
+| Code Display (`ui/code.py`) | 85% | Medium | 72% |
+| Formatters (`ui/formatters.py`) | 80% | Medium | 73% |
+| Banners (`ui/banners.py`) | 75% | Low | 20% ⚠️ |
 | Example Scripts | 0% | N/A | N/A |
 
 ## Understanding Coverage Reports
@@ -379,18 +379,20 @@ Or with dynamic coverage:
 
 ## Current Coverage Status
 
-### Overall Coverage: 82%
+### Overall Coverage: 71%
 
 **High Coverage Modules (>95%)**:
-- `ui/terminal.py`: 99% ✅
+- `cli.py`: 100% ✅
 - `ui/theme.py`: 98% ✅
+- `ui/terminal.py`: 97% ✅
 - `__init__.py` files: 100% ✅
 
 **Needs Improvement (<80%)**:
-- `ui/output.py`: 69% ⚠️
-- `cli.py`: 73% ⚠️
-- `ui/banners.py`: 73% ⚠️
-- `ui/code.py`: 75% ⚠️
+- `ui/output.py`: 62% ⚠️
+- `ui/prompts.py`: 79% ⚠️
+- `ui/formatters.py`: 73% ⚠️
+- `ui/code.py`: 72% ⚠️
+- `ui/banners.py`: 20% ⚠️
 
 ## Next Steps
 

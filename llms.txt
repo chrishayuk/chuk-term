@@ -1,0 +1,366 @@
+# ChukTerm
+
+> A modern Python terminal library for building beautiful CLI applications with AI agents in mind
+
+## Overview
+
+ChukTerm is a comprehensive terminal UI library that provides rich output formatting, interactive prompts, theme support, and terminal management utilities. It's designed to make it easy for both humans and AI agents to create beautiful, functional command-line interfaces.
+
+Key features:
+- 🎨 8 built-in themes (default, dark, light, minimal, terminal, monokai, dracula, solarized)
+- 📝 Rich output with automatic theme adaptation
+- 💬 Interactive prompts and user input
+- 🎯 Singleton output system for consistent formatting
+- 🔧 Cross-platform terminal management
+- 📊 Tables, trees, JSON, and structured data display
+- 🎮 Full async/await support
+
+## Quick Navigation
+
+| Need Help With | Documentation |
+|----------------|---------------|
+| **Getting Started** | 📚 [Comprehensive Guide](docs/ui/GETTING_STARTED.md) |
+| **Using Themes** | 🎨 [Theme Documentation](docs/ui/themes.md) |
+| **Output Methods** | 📤 [Output API Reference](docs/ui/output.md) |
+| **Terminal Control** | 🖥️ [Terminal Management](docs/ui/terminal.md) |
+| **Testing** | 🧪 [Testing Guide](docs/testing/UNIT_TESTING.md) |
+| **Examples** | 📂 [Working Examples](examples/) |
+| **Installation** | ⬇️ [Jump to Install](#installation) |
+
+## Quick Start for AI Agents
+
+The simplest way to use ChukTerm:
+
+```python
+from chuk_term.ui import output, ask, confirm
+
+# Output messages at different levels
+output.info("Processing your request...")
+output.success("✓ Task completed")
+output.error("✗ Something went wrong")
+
+# Get user input
+name = ask("What's your name?")
+if confirm("Continue?"):
+    output.info(f"Hello, {name}!")
+```
+
+## Core Concepts
+
+### Output System (Singleton)
+The output system is the main interface for all terminal output. It automatically adapts to the current theme and environment.
+
+📖 **[Full Output API Documentation](docs/ui/output.md)**
+
+```python
+from chuk_term.ui import output
+
+output.info("Information")      # Standard info
+output.success("Success!")      # Success message  
+output.warning("Warning!")      # Important warning
+output.error("Error!")          # Error message
+output.debug("Debug info")      # Only in verbose mode
+```
+
+### Themes
+Themes control how output appears. The library includes 8 themes that automatically adapt formatting:
+
+🎨 **[Complete Theme Guide](docs/ui/themes.md)**
+
+- `default`: Full Rich formatting with colors and emojis
+- `minimal`: Plain text without ANSI codes (for logging/CI)
+- `terminal`: Basic ANSI colors only
+- `dark`/`light`: Dark and light color schemes
+- `monokai`/`dracula`/`solarized`: Popular color schemes
+
+```python
+from chuk_term.ui import set_theme
+set_theme("minimal")  # Use plain text output
+```
+
+### Interactive Prompts
+Get user input with various prompt types:
+
+💬 **[See all prompt examples](docs/ui/GETTING_STARTED.md#user-interaction)**
+
+```python
+from chuk_term.ui import ask, confirm, select_from_list
+
+name = ask("Name?")
+if confirm("Delete?"):
+    choice = select_from_list(["A", "B", "C"], "Pick one:")
+```
+
+## Key Patterns for AI Agents
+
+📚 **[Complete Examples Directory](examples/)** | **[Getting Started Patterns](docs/ui/GETTING_STARTED.md#common-patterns-for-ai-agents)**
+
+### Providing Task Feedback
+```python
+output.info("🔍 Analyzing code...")
+with output.progress("Processing files..."):
+    # Long operation
+    process()
+output.success("✓ Analysis complete!")
+```
+
+### Error Handling
+```python
+try:
+    perform_operation()
+    output.success("✓ Done")
+except Exception as e:
+    output.error(f"✗ Failed: {e}")
+    if confirm("Retry?"):
+        # retry logic
+```
+
+### Displaying Data
+🔧 **[See all formatters](docs/ui/GETTING_STARTED.md#structured-data-display)**
+
+```python
+# Tables
+output.print_table(data, title="Results")
+
+# JSON
+output.json(config_dict)
+
+# Tree structure  
+output.tree(nested_dict)
+
+# Key-value pairs
+output.kvpairs({"status": "active", "version": "1.0"})
+```
+
+## Installation
+
+### Using uv (Recommended)
+```bash
+# Install as dependency
+uv add chuk-term
+
+# Install globally as tool
+uv tool install chuk-term
+```
+
+### Using pip
+```bash
+# Install from PyPI
+pip install chuk-term
+
+# With development dependencies
+pip install chuk-term[dev]
+```
+
+### From Source
+```bash
+# Clone repository
+git clone https://github.com/yourusername/chuk-term.git
+cd chuk-term
+
+# Install with uv (recommended)
+uv sync --dev
+
+# Or with pip
+pip install -e ".[dev]"
+
+# Verify installation
+chuk-term --version
+```
+
+## Project Structure
+
+```
+chuk-term/
+├── src/chuk_term/       # Main package
+│   ├── cli.py          # CLI interface
+│   └── ui/             # UI components
+│       ├── output.py   # Output system (singleton)
+│       ├── theme.py    # Theme system
+│       ├── prompts.py  # User interaction
+│       ├── terminal.py # Terminal management
+│       ├── code.py     # Code display
+│       ├── formatters.py # Data formatting
+│       └── banners.py  # Headers/banners
+├── tests/              # Comprehensive test suite
+├── examples/           # Usage examples
+└── docs/              # Documentation
+    └── ui/
+        └── GETTING_STARTED.md  # Quick start guide
+```
+
+## Common Use Cases
+
+### 1. CLI Tool Output
+```python
+output.info("Starting process...")
+output.success("✓ Process complete")
+```
+
+### 2. User Interaction
+```python
+name = ask("Enter name:")
+if confirm("Proceed?"):
+    execute()
+```
+
+### 3. Progress Indication
+```python
+with output.progress("Working..."):
+    long_operation()
+```
+
+### 4. Data Display
+```python
+output.print_table(results)
+output.json(config)
+```
+
+### 5. Error Messages
+```python
+output.error("Failed to connect")
+output.warning("Deprecated feature")
+```
+
+## Environment Adaptation
+
+ChukTerm automatically adapts to the environment:
+
+- **TTY Detection**: Uses minimal theme for non-TTY environments
+- **CI Detection**: Uses minimal theme in CI environments  
+- **NO_COLOR**: Respects NO_COLOR environment variable
+- **Theme Adaptation**: All output methods work with all themes
+
+## Best Practices
+
+1. **Always provide feedback**: Tell users what's happening
+2. **Use appropriate levels**: info, success, warning, error
+3. **Handle errors gracefully**: Clear error messages with recovery options
+4. **Respect environment**: Adapt to CI, non-TTY, NO_COLOR
+5. **Progressive disclosure**: Start with summary, offer details
+
+## Testing
+
+🧪 **[Testing Guide](docs/testing/UNIT_TESTING.md)** | **[Coverage Report](docs/testing/TEST_COVERAGE.md)**
+
+Run tests with coverage:
+```bash
+uv run pytest --cov=chuk_term
+```
+
+All UI components are tested across all 8 themes to ensure consistent behavior.
+
+## Dependencies
+
+- Python 3.10+
+- click (CLI framework)
+- rich (terminal formatting)
+
+## Development
+
+```bash
+# Install with dev dependencies
+uv sync --dev
+
+# Run tests
+uv run pytest
+
+# Check coverage
+uv run pytest --cov=chuk_term
+
+# Lint code
+uv run ruff check src/ tests/
+
+# Format code
+uv run black src/ tests/
+```
+
+## Example: Complete AI Agent Task
+
+🚀 **[Full Example with Explanation](docs/ui/GETTING_STARTED.md#complete-example-ai-agent-task)**
+
+```python
+from chuk_term.ui import output, set_theme, confirm, select_from_list
+
+def analyze_code():
+    # Adapt to environment
+    if not sys.stdout.isatty():
+        set_theme("minimal")
+    
+    output.rule("🤖 Code Analyzer")
+    
+    # Get input
+    language = select_from_list(
+        ["Python", "JavaScript", "Auto"],
+        "Select language:"
+    )
+    
+    # Process with feedback
+    output.info("🔍 Analyzing...")
+    with output.progress("Scanning files..."):
+        results = scan_files()
+    
+    # Show results
+    output.success(f"✓ Found {len(results)} issues")
+    
+    if results and confirm("Show details?"):
+        output.print_table(results)
+    
+    output.tip("Run with --fix to auto-fix issues")
+```
+
+## Key APIs
+
+📖 **[Complete API Reference](docs/ui/output.md)** | **[Terminal APIs](docs/ui/terminal.md)**
+
+### Output Methods
+- `output.info(msg)` - Information message
+- `output.success(msg)` - Success message
+- `output.warning(msg)` - Warning message
+- `output.error(msg)` - Error message
+- `output.debug(msg)` - Debug message (verbose only)
+
+### Prompts
+- `ask(question, default=None, password=False)` - Text input
+- `confirm(question, default=False)` - Yes/no confirmation
+- `select_from_list(options, prompt)` - Single selection
+- `select_multiple(options, prompt)` - Multiple selection
+
+### Data Display
+- `output.print_table(data, title=None)` - Display table
+- `output.json(data, title=None)` - Display JSON
+- `output.tree(data, title=None)` - Display tree
+- `output.markdown(text)` - Render markdown
+
+### Terminal Control
+- `clear_screen()` - Clear terminal screen
+- `set_terminal_title(title)` - Set terminal title
+- `bell()` - Terminal bell sound
+
+## Philosophy
+
+ChukTerm is designed with these principles:
+
+1. **Simplicity**: Easy to use for both humans and AI agents
+2. **Adaptability**: Works in any environment (TTY, CI, pipes)
+3. **Consistency**: Uniform API across all themes
+4. **Beauty**: Beautiful output when possible, functional always
+5. **Testability**: Comprehensive test coverage for reliability
+
+## License
+
+MIT License - See LICENSE file for details
+
+## Contributing
+
+Contributions welcome! Please ensure:
+- All tests pass
+- Code is formatted with black
+- New features include tests
+- Documentation is updated
+
+## Support
+
+- GitHub Issues: Report bugs or request features
+- Documentation: See docs/ directory
+- Examples: See examples/ directory for usage patterns

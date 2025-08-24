@@ -8,8 +8,8 @@ from chuk_term import __version__
 from chuk_term.ui import (
     ask,
     confirm,
-    display_code,
     display_chat_banner,
+    display_code,
     display_interactive_banner,
     output,
     select_from_list,
@@ -89,7 +89,11 @@ def demo() -> None:
 
 
 @cli.command()
-@click.option("--theme", type=click.Choice(["default", "dark", "light", "minimal", "terminal", "monokai", "dracula"]), help="Set the theme")
+@click.option(
+    "--theme",
+    type=click.Choice(["default", "dark", "light", "minimal", "terminal", "monokai", "dracula"]),
+    help="Set the theme",
+)
 def test(theme: str | None) -> None:
     """Run terminal tests."""
     if theme:

@@ -1,5 +1,7 @@
 """Unit tests for formatters module."""
 
+# ruff: noqa: ARG002
+
 import json
 from datetime import datetime, timedelta
 
@@ -40,10 +42,7 @@ class TestFormatToolCall:
     def test_format_tool_call_minimal(self, minimal_theme):
         """Test tool call formatting in minimal theme."""
         result = format_tool_call(
-            "test_tool",
-            {"arg1": "value1", "arg2": 123},
-            include_description=True,
-            description="Test tool description"
+            "test_tool", {"arg1": "value1", "arg2": 123}, include_description=True, description="Test tool description"
         )
 
         assert isinstance(result, str)
@@ -54,14 +53,10 @@ class TestFormatToolCall:
 
     def test_format_tool_call_rich(self, default_theme):
         """Test tool call formatting in rich theme."""
-        result = format_tool_call(
-            "test_tool",
-            {"arg1": "value1"},
-            include_description=False
-        )
+        result = format_tool_call("test_tool", {"arg1": "value1"}, include_description=False)
 
         # Should return Markdown object for rich themes
-        assert hasattr(result, 'markup')  # Markdown has markup attribute
+        assert hasattr(result, "markup")  # Markdown has markup attribute
 
     def test_format_tool_call_no_arguments(self, minimal_theme):
         """Test tool call with no arguments."""
@@ -76,11 +71,7 @@ class TestFormatToolResult:
 
     def test_format_tool_result_success(self, minimal_theme):
         """Test successful tool result formatting."""
-        result = format_tool_result(
-            {"data": "test"},
-            success=True,
-            execution_time=1.23
-        )
+        result = format_tool_result({"data": "test"}, success=True, execution_time=1.23)
 
         assert isinstance(result, str)
         assert "Success" in result
@@ -89,10 +80,7 @@ class TestFormatToolResult:
 
     def test_format_tool_result_failure(self, minimal_theme):
         """Test failed tool result formatting."""
-        result = format_tool_result(
-            "Error message",
-            success=False
-        )
+        result = format_tool_result("Error message", success=False)
 
         assert isinstance(result, str)
         assert "Failed" in result
@@ -100,11 +88,7 @@ class TestFormatToolResult:
 
     def test_format_tool_result_rich(self, default_theme):
         """Test tool result in rich theme."""
-        result = format_tool_result(
-            {"status": "ok"},
-            success=True,
-            execution_time=0.5
-        )
+        result = format_tool_result({"status": "ok"}, success=True, execution_time=0.5)
 
         # Rich themes return Text or Markdown
         assert result is not None
@@ -125,11 +109,7 @@ class TestFormatError:
     def test_format_error_with_context(self, minimal_theme):
         """Test error with context."""
         error = RuntimeError("Failed")
-        result = format_error(
-            error,
-            context="During processing",
-            suggestions=["Check input", "Retry operation"]
-        )
+        result = format_error(error, context="During processing", suggestions=["Check input", "Retry operation"])
 
         assert "Context: During processing" in result
         assert "Suggestions:" in result
@@ -174,10 +154,11 @@ class TestFormatJson:
         result = format_json(data, syntax_highlight=True)
 
         # Rich theme returns Syntax object
-        assert hasattr(result, 'lexer')  # Syntax objects have lexer
+        assert hasattr(result, "lexer")  # Syntax objects have lexer
 
     def test_format_json_invalid_data(self, minimal_theme):
         """Test JSON formatting with non-serializable data."""
+
         # Create non-serializable object
         class NonSerializable:
             pass
@@ -192,10 +173,7 @@ class TestFormatTable:
 
     def test_format_table_basic(self, minimal_theme):
         """Test basic table formatting."""
-        data = [
-            {"name": "Alice", "age": 30},
-            {"name": "Bob", "age": 25}
-        ]
+        data = [{"name": "Alice", "age": 30}, {"name": "Bob", "age": 25}]
         result = format_table(data)
 
         assert isinstance(result, str)
@@ -215,10 +193,7 @@ class TestFormatTable:
 
     def test_format_table_specific_columns(self, minimal_theme):
         """Test table with specific columns."""
-        data = [
-            {"a": 1, "b": 2, "c": 3},
-            {"a": 4, "b": 5, "c": 6}
-        ]
+        data = [{"a": 1, "b": 2, "c": 3}, {"a": 4, "b": 5, "c": 6}]
         result = format_table(data, columns=["a", "c"])
 
         assert "1" in result
@@ -246,14 +221,7 @@ class TestFormatTree:
 
     def test_format_tree_basic(self, minimal_theme):
         """Test basic tree formatting."""
-        data = {
-            "root": {
-                "child1": "value1",
-                "child2": {
-                    "grandchild": "value2"
-                }
-            }
-        }
+        data = {"root": {"child1": "value1", "child2": {"grandchild": "value2"}}}
         result = format_tree(data)
 
         assert isinstance(result, str)
@@ -272,15 +240,7 @@ class TestFormatTree:
 
     def test_format_tree_max_depth(self, minimal_theme):
         """Test tree with max depth."""
-        data = {
-            "level1": {
-                "level2": {
-                    "level3": {
-                        "level4": "deep"
-                    }
-                }
-            }
-        }
+        data = {"level1": {"level2": {"level3": {"level4": "deep"}}}}
         result = format_tree(data, max_depth=2)
 
         assert "level1" in result
@@ -289,12 +249,7 @@ class TestFormatTree:
 
     def test_format_tree_with_lists(self, minimal_theme):
         """Test tree with list values."""
-        data = {
-            "items": ["a", "b", "c"],
-            "nested": {
-                "more": ["x", "y"]
-            }
-        }
+        data = {"items": ["a", "b", "c"], "nested": {"more": ["x", "y"]}}
         result = format_tree(data)
 
         assert "[0]" in result
@@ -387,4 +342,4 @@ class TestFormatDiff:
         result = format_diff(old, new)
 
         # Rich theme returns Syntax object
-        assert hasattr(result, 'lexer')
+        assert hasattr(result, "lexer")

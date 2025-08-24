@@ -1,6 +1,5 @@
 """Tests for the CLI interface."""
 
-
 from chuk_term import __version__
 from chuk_term.cli import cli
 

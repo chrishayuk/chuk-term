@@ -1,6 +1,5 @@
 """Main test module for ChukTerm."""
 
-
 from chuk_term import __author__, __email__, __version__
 
 

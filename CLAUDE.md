@@ -3,6 +3,28 @@
 ## Project Overview
 ChukTerm is a modern Python terminal library with a powerful CLI interface for building beautiful terminal applications. It provides rich UI components, theme support, and comprehensive terminal management utilities.
 
+### 📚 Quick Documentation Links
+- **[Getting Started Guide](docs/ui/GETTING_STARTED.md)** - Comprehensive guide with installation, examples, and patterns
+- **[LLM Documentation](llms.txt)** - Optimized documentation following llmstxt.org specification
+- **[API Reference](docs/ui/output.md)** - Complete API documentation
+- **[Examples](examples/)** - Working code examples for all features
+
+### 🚀 Quick Start for AI Agents
+```python
+from chuk_term.ui import output, ask, confirm
+
+# Basic output
+output.info("Processing request...")
+output.success("✓ Task completed")
+output.error("✗ Something went wrong")
+
+# User interaction
+name = ask("What's your name?")
+if confirm("Continue?"):
+    output.info(f"Hello, {name}!")
+```
+For more examples, see the [Getting Started Guide](docs/ui/GETTING_STARTED.md#quick-start).
+
 ## Key Features
 - 🎨 **Rich UI Components**: Banners, prompts, formatters, and code display with syntax highlighting
 - 🎯 **Centralized Output Management**: Consistent console output with multiple log levels (debug, info, success, warning, error, fatal)
@@ -12,6 +34,24 @@ ChukTerm is a modern Python terminal library with a powerful CLI interface for b
 - 💬 **Interactive Prompts**: Text input, confirmations, number input, single/multi selection menus
 - 📊 **Data Formatting**: Tables, trees, JSON, timestamps, structured output
 - 🔄 **Asyncio Support**: Full async/await support with proper cleanup
+
+## Installation
+
+### Quick Install
+```bash
+# Using uv (recommended)
+uv add chuk-term
+
+# Using pip
+pip install chuk-term
+
+# From source for development
+git clone https://github.com/yourusername/chuk-term.git
+cd chuk-term
+uv sync --dev  # or pip install -e ".[dev]"
+```
+
+For detailed installation instructions, see the [Getting Started Guide](docs/ui/GETTING_STARTED.md#installation).
 
 ## Development Environment
 - **Python Version**: 3.10+ required
@@ -37,12 +77,14 @@ chuk-term/
 ├── examples/               # Demo scripts for all features
 ├── docs/                   # Detailed documentation
 │   ├── ui/
+│   │   ├── GETTING_STARTED.md # 🚀 Quick start guide for developers/AI agents
 │   │   ├── output.md      # Output system documentation
 │   │   ├── terminal.md    # Terminal management guide
 │   │   └── themes.md      # Theme system documentation
 │   └── testing/
 │       ├── UNIT_TESTING.md
 │       └── TEST_COVERAGE.md
+├── llms.txt               # 🤖 LLM-optimized documentation (llmstxt.org)
 └── pyproject.toml         # Package configuration
 
 ```
@@ -50,6 +92,7 @@ chuk-term/
 ## Common Commands
 
 ### Development Setup
+⚙️ **[Full Installation Guide](docs/ui/GETTING_STARTED.md#installation)**
 ```bash
 # Install with dev dependencies
 uv sync --dev
@@ -59,18 +102,20 @@ pre-commit install
 ```
 
 ### Testing
+🧪 **[Testing Documentation](docs/testing/UNIT_TESTING.md)**
 ```bash
-# Run all tests with coverage
+# Run all tests with coverage (351 tests)
 uv run pytest --cov=chuk_term
 
 # Run specific test file
 uv run pytest tests/ui/test_output.py -v
 
-# Generate coverage report
+# Generate coverage report (current: 71%)
 uv run pytest --cov=chuk_term --cov-report=html
 ```
 
 ### Code Quality
+🎯 **[Code Quality Standards](docs/testing/CODE_QUALITY.md)** | **[Best Practices](docs/testing/UNIT_TESTING.md#best-practices)**
 ```bash
 # Linting
 uv run ruff check src/ tests/
@@ -89,6 +134,7 @@ make check
 ```
 
 ### Running Examples
+📂 **[Browse All Examples](examples/)**
 ```bash
 # UI components demo
 uv run python examples/ui_demo.py
@@ -122,12 +168,14 @@ chuk-term test --theme monokai
 ## Key Architecture Decisions
 
 ### Output System (Singleton)
+📖 **[Full Output API Documentation](docs/ui/output.md)**
 - Single `Output` instance manages all console output
 - Automatically adapts to current theme
 - Supports quiet/verbose modes
 - Handles non-TTY environments gracefully
 
 ### Theme System
+🎨 **[Complete Theme Documentation](docs/ui/themes.md)**
 - **default/dark/light**: Full Rich formatting with colors and emojis
 - **minimal**: Plain text without ANSI codes (for logging/CI)
 - **terminal**: Basic ANSI colors only (for simple terminals)
@@ -135,12 +183,15 @@ chuk-term test --theme monokai
 - Theme changes affect all output automatically
 
 ### Terminal Manager
+🖥️ **[Terminal Management Guide](docs/ui/terminal.md)**
 - Cross-platform support (Windows, macOS, Linux)
 - Feature detection (color support, terminal size, etc.)
 - Graceful degradation for unsupported features
 - Comprehensive asyncio cleanup on exit
 
 ## Important Patterns
+
+📚 **[See Getting Started Guide for More Examples](docs/ui/GETTING_STARTED.md#common-patterns-for-ai-agents)**
 
 ### Using the Output System
 ```python
@@ -166,6 +217,7 @@ if theme.name == "minimal":
 ```
 
 ### Interactive Prompts
+💬 **[Prompt Examples](docs/ui/GETTING_STARTED.md#user-interaction)**
 ```python
 from chuk_term.ui import ask, confirm, select_from_list
 
@@ -175,13 +227,16 @@ if confirm("Continue?"):
 ```
 
 ## Testing Guidelines
+🧪 **[Unit Testing Guide](docs/testing/UNIT_TESTING.md)** | **[Coverage Report](docs/testing/TEST_COVERAGE.md)**
 - All modules have corresponding test files in `tests/`
-- Aim for >95% code coverage
+- Current coverage: 71% (target: >80%)
 - Test all themes and output modes
 - Mock external dependencies (filesystem, terminal operations)
 - Test both TTY and non-TTY environments
 
 ## Common Issues and Solutions
+
+🔧 **[Troubleshooting Guide](docs/ui/GETTING_STARTED.md#error-recovery)**
 
 ### Import Errors
 - Ensure running from project root
@@ -199,6 +254,7 @@ if confirm("Continue?"):
 - Cleanup is performed even on exceptions
 
 ## Code Style
+📝 **[See Contributing Guidelines](CONTRIBUTING.md)**
 - Line length: 120 characters
 - Use type hints for all functions
 - Follow PEP 8 with Black formatting
@@ -228,12 +284,13 @@ if confirm("Continue?"):
 - [ ] Terminal multiplexer detection improvements
 
 ## Quick Debugging
+🔍 **[Debug Tips in Getting Started](docs/ui/GETTING_STARTED.md#error-recovery)**
 ```python
 # Check current theme
 from chuk_term.ui.theme import get_theme
 print(get_theme().name)
 
-# Check terminal capabilities
+# Check terminal capabilities  
 from chuk_term.ui.terminal import get_terminal_info
 print(get_terminal_info())
 
@@ -252,3 +309,62 @@ get_output().set_output_mode(verbose=True)
 - Test on multiple terminals (iTerm2, Terminal.app, Windows Terminal, etc.)
 - Maintain backward compatibility for Python 3.10+
 - Keep documentation in sync with code changes
+
+## 🤖 Important Guidelines for AI Agents
+
+### Code Quality Requirements
+When making changes to this codebase, you MUST:
+
+1. **Run Code Quality Checks** - After making any code changes, always run:
+   ```bash
+   # Check linting (MUST pass before committing)
+   uv run ruff check src/ tests/
+   
+   # Check formatting (MUST pass before committing)
+   uv run black --check src/ tests/
+   
+   # Auto-fix issues if needed
+   uv run ruff check --fix --unsafe-fixes src/ tests/
+   uv run black src/ tests/
+   ```
+
+2. **Run Tests** - Verify your changes don't break existing functionality:
+   ```bash
+   # Run all tests
+   uv run pytest
+   
+   # Run with coverage to ensure no regression
+   uv run pytest --cov=chuk_term
+   ```
+
+3. **Complete Verification Command** - Use this single command to verify everything:
+   ```bash
+   # Run all checks (linting, formatting, and tests)
+   uv run ruff check src/ tests/ && \
+   uv run black --check src/ tests/ && \
+   uv run pytest
+   ```
+
+### When to Run Checks
+- **ALWAYS** after making code changes
+- **BEFORE** suggesting code is complete
+- **WHEN** the user asks you to "fix linting" or "check tests"
+- **IF** you see import errors or syntax issues
+
+### Common Issues and Solutions
+- **Unused imports (F401)**: Remove or add `# noqa: F401` if intentional
+- **Unused arguments (ARG001/ARG002)**: Use `_` prefix or add `# noqa: ARG002` for test mocks
+- **Line too long**: Keep lines under 120 characters
+- **Formatting issues**: Run `uv run black src/ tests/` to auto-fix
+
+### Test Coverage Target
+- Current coverage: 71%
+- Target coverage: >80%
+- Never let coverage drop below current level
+
+# important-instruction-reminders
+Do what has been asked; nothing more, nothing less.
+NEVER create files unless they're absolutely necessary for achieving your goal.
+ALWAYS prefer editing an existing file to creating a new one.
+NEVER proactively create documentation files (*.md) or README files. Only create documentation files if explicitly requested by the User.
+ALWAYS run code quality checks (linting, formatting, tests) after making code changes.

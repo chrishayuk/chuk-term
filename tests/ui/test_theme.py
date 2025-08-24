@@ -191,13 +191,16 @@ class TestTheme:
         assert isinstance(theme.icons, Icons)
         assert theme._style_cache == {}
 
-    @pytest.mark.parametrize("theme_name,color_scheme_class,icons_class", [
-        ("default", ColorScheme, Icons),
-        ("dark", DarkColorScheme, Icons),
-        ("light", LightColorScheme, Icons),
-        ("minimal", MinimalColorScheme, MinimalIcons),
-        ("terminal", TerminalColorScheme, MinimalIcons),
-    ])
+    @pytest.mark.parametrize(
+        "theme_name,color_scheme_class,icons_class",
+        [
+            ("default", ColorScheme, Icons),
+            ("dark", DarkColorScheme, Icons),
+            ("light", LightColorScheme, Icons),
+            ("minimal", MinimalColorScheme, MinimalIcons),
+            ("terminal", TerminalColorScheme, MinimalIcons),
+        ],
+    )
     def test_theme_loading(self, theme_name, color_scheme_class, icons_class):
         """Test different themes load correct color schemes and icons."""
         theme = Theme(theme_name)
@@ -227,11 +230,11 @@ class TestTheme:
         theme = Theme()
 
         # First call builds style
-        style1 = theme.style("error", "emphasis")
+        _ = theme.style("error", "emphasis")
         assert "error|emphasis" in theme._style_cache
 
         # Second call uses cache
-        with patch.object(theme, '_style_cache', {"error|emphasis": "cached"}):
+        with patch.object(theme, "_style_cache", {"error|emphasis": "cached"}):
             style2 = theme.style("error", "emphasis")
             assert style2 == "cached"
 
@@ -328,6 +331,7 @@ class TestGlobalThemeFunctions:
         """Test get_theme returns default theme when none set."""
         # Reset global theme
         import chuk_term.ui.theme
+
         chuk_term.ui.theme._theme = None
 
         theme = get_theme()
@@ -336,7 +340,7 @@ class TestGlobalThemeFunctions:
 
     def test_set_theme(self):
         """Test setting global theme."""
-        with patch('chuk_term.ui.output.get_output') as mock_get_output:
+        with patch("chuk_term.ui.output.get_output") as mock_get_output:
             mock_output = Mock()
             mock_get_output.return_value = mock_output
 
@@ -346,12 +350,12 @@ class TestGlobalThemeFunctions:
             assert isinstance(theme.colors, DarkColorScheme)
 
             # Should notify output system if it has set_theme method
-            if hasattr(mock_output, 'set_theme'):
+            if hasattr(mock_output, "set_theme"):
                 mock_output.set_theme.assert_called_once_with(theme)
 
     def test_set_theme_without_output(self):
         """Test setting theme when output module not available."""
-        with patch('chuk_term.ui.output.get_output', side_effect=ImportError):
+        with patch("chuk_term.ui.output.get_output", side_effect=ImportError):
             theme = set_theme("minimal")
             assert theme.name == "minimal"
             # Should not raise error
@@ -361,7 +365,7 @@ class TestGlobalThemeFunctions:
         custom_theme = Theme("custom")
         custom_theme.colors.primary = "purple"
 
-        with patch('chuk_term.ui.output.get_output') as mock_get_output:
+        with patch("chuk_term.ui.output.get_output") as mock_get_output:
             mock_output = Mock()
             mock_get_output.return_value = mock_output
 
@@ -369,10 +373,11 @@ class TestGlobalThemeFunctions:
 
             # Global theme should be the custom instance
             import chuk_term.ui.theme
+
             assert chuk_term.ui.theme._theme is custom_theme
 
             # Should notify output system
-            if hasattr(mock_output, 'set_theme'):
+            if hasattr(mock_output, "set_theme"):
                 mock_output.set_theme.assert_called_once_with(custom_theme)
 
 
@@ -381,7 +386,7 @@ class TestHelperFunctions:
 
     def test_apply_theme_to_output(self):
         """Test applying theme to output instance."""
-        theme = Theme("dark")
+        _ = Theme("dark")
         mock_output = Mock()
 
         # With set_theme method
@@ -397,7 +402,7 @@ class TestHelperFunctions:
 
     def test_get_style_for_level(self):
         """Test getting style for log levels."""
-        with patch('chuk_term.ui.theme.get_theme') as mock_get_theme:
+        with patch("chuk_term.ui.theme.get_theme") as mock_get_theme:
             mock_theme = Mock()
             mock_theme.style.return_value = "test_style"
             mock_get_theme.return_value = mock_theme
@@ -407,18 +412,21 @@ class TestHelperFunctions:
             mock_theme.style.assert_called_once_with("error")
             assert style == "test_style"
 
-    @pytest.mark.parametrize("component,expected_styles", [
-        ("success", ("success", "emphasis")),
-        ("error", ("error", "emphasis")),
-        ("warning", ("warning",)),
-        ("info", ("info",)),
-        ("tool", ("tool", "emphasis")),
-        ("user", ("user", "emphasis")),
-        ("assistant", ("assistant", "emphasis")),
-    ])
+    @pytest.mark.parametrize(
+        "component,expected_styles",
+        [
+            ("success", ("success", "emphasis")),
+            ("error", ("error", "emphasis")),
+            ("warning", ("warning",)),
+            ("info", ("info",)),
+            ("tool", ("tool", "emphasis")),
+            ("user", ("user", "emphasis")),
+            ("assistant", ("assistant", "emphasis")),
+        ],
+    )
     def test_format_with_theme(self, component, expected_styles):
         """Test formatting text with theme for different components."""
-        with patch('chuk_term.ui.theme.get_theme') as mock_get_theme:
+        with patch("chuk_term.ui.theme.get_theme") as mock_get_theme:
             mock_theme = Mock()
             mock_theme.format.return_value = "[styled]text[/]"
             mock_get_theme.return_value = mock_theme
@@ -504,6 +512,7 @@ class TestThemeIntegration:
 
     def test_custom_theme_creation(self):
         """Test creating and using a custom theme."""
+
         # Create custom color scheme
         class CustomColorScheme(ColorScheme):
             def __init__(self):
@@ -531,4 +540,5 @@ def reset_global_theme():
     yield
     # Reset to None so next test starts fresh
     import chuk_term.ui.theme
+
     chuk_term.ui.theme._theme = None

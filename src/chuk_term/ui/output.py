@@ -25,6 +25,7 @@ from chuk_term.ui.theme import Theme, get_theme
 
 class OutputLevel(Enum):
     """Output levels for messages."""
+
     DEBUG = "debug"
     INFO = "info"
     SUCCESS = "success"
@@ -36,7 +37,7 @@ class OutputLevel(Enum):
 class Output:
     """
     Centralized output manager.
-    
+
     Provides a consistent interface for all console output in the application.
     """
 
@@ -50,7 +51,7 @@ class Output:
 
     def __init__(self):
         """Initialize output manager."""
-        if not hasattr(self, '_initialized'):
+        if not hasattr(self, "_initialized"):
             # Create console with NO color for minimal/terminal themes initially
             self._console = Console(
                 no_color=False,  # We'll control this based on theme
@@ -98,7 +99,7 @@ class Output:
     def set_output_mode(self, quiet: bool = False, verbose: bool = False):
         """
         Set output mode for the console.
-        
+
         Args:
             quiet: Suppress non-essential output
             verbose: Show additional debug output
@@ -109,7 +110,7 @@ class Output:
     def _strip_markup(self, text: str) -> str:
         """Remove Rich markup from text."""
         # Remove [style] tags
-        text = re.sub(r'\[/?[^\]]*\]', '', text)
+        text = re.sub(r"\[/?[^\]]*\]", "", text)
         return text
 
     def _plain_print(self, message: str, file=None):
@@ -123,12 +124,12 @@ class Output:
     def print(self, message: Any = "", **kwargs):
         """
         Print a message to the console.
-        
+
         Args:
             message: Message to print
             **kwargs: Additional arguments for rich.console.print
         """
-        if not self._quiet or kwargs.get('force', False):
+        if not self._quiet or kwargs.get("force", False):
             if self._theme.name == "minimal":
                 # For minimal theme, strip all markup and print plain text
                 if isinstance(message, str):
@@ -139,7 +140,7 @@ class Output:
                     self._plain_print(str(message.markup))
                 elif isinstance(message, Panel):
                     # Extract panel content
-                    if hasattr(message, 'renderable'):
+                    if hasattr(message, "renderable"):
                         if isinstance(message.renderable, Markdown):
                             self._plain_print(str(message.renderable.markup))
                         elif isinstance(message.renderable, Text):
@@ -295,16 +296,10 @@ class Output:
 
     # ─────────────────────────── Rich Components ────────────────────────
 
-    def panel(
-        self,
-        content: Any,
-        title: str | None = None,
-        style: str = "default",
-        **kwargs
-    ):
+    def panel(self, content: Any, title: str | None = None, style: str = "default", **kwargs):
         """
         Print content in a panel.
-        
+
         Args:
             content: Content to display in panel
             title: Panel title
@@ -312,7 +307,7 @@ class Output:
             **kwargs: Additional Panel arguments (except 'force')
         """
         # Extract our custom 'force' parameter
-        force = kwargs.pop('force', False)
+        force = kwargs.pop("force", False)
 
         if not self._quiet or force:
             if self._theme.name == "minimal":
@@ -340,23 +335,21 @@ class Output:
 
                 # Convert content to plain text
                 if isinstance(content, str):
-                    for line in content.split('\n'):
+                    for line in content.split("\n"):
                         self._plain_print(f"  {line}")
                 elif isinstance(content, Markdown):
-                    for line in str(content.markup).split('\n'):
+                    for line in str(content.markup).split("\n"):
                         self._plain_print(f"  {line}")
                 elif isinstance(content, Text):
-                    for line in content.plain.split('\n'):
+                    for line in content.plain.split("\n"):
                         self._plain_print(f"  {line}")
                 else:
-                    for line in str(content).split('\n'):
+                    for line in str(content).split("\n"):
                         self._plain_print(f"  {line}")
                 self._plain_print("")
             else:
                 # Normal mode - show panel
-                self._console.print(
-                    Panel(content, title=title, border_style=style, **kwargs)
-                )
+                self._console.print(Panel(content, title=title, border_style=style, **kwargs))
 
     def markdown(self, text: str, **kwargs):
         """Print markdown formatted text."""
@@ -370,10 +363,10 @@ class Output:
     def table(self, title: str | None = None) -> Table:
         """
         Create a table for display.
-        
+
         Args:
             title: Table title
-            
+
         Returns:
             Rich Table object
         """
@@ -388,6 +381,7 @@ class Output:
             elif self._theme.is_minimal() or self._theme.name == "terminal":
                 # Convert Rich Table to plain text for minimal/terminal themes
                 from rich.table import Table
+
                 if isinstance(table, Table):
                     # Convert table to simple text format
                     self._print_table_as_text(table)
@@ -400,13 +394,13 @@ class Output:
     def _print_table_as_text(self, table):
         """Convert a Rich Table to plain text output."""
         # Extract rows from the table
-        if hasattr(table, '_rows'):
+        if hasattr(table, "_rows"):
             for row in table._rows:
                 # Get cell values
                 cells = []
                 for cell in row:
                     # Extract text from cell
-                    if hasattr(cell, 'plain'):
+                    if hasattr(cell, "plain"):
                         cells.append(cell.plain)
                     else:
                         cells.append(str(cell))
@@ -424,7 +418,7 @@ class Output:
     def progress(self, description: str = "Processing..."):
         """
         Create a progress context manager.
-        
+
         Usage:
             with console.progress("Loading...") as progress:
                 # Do work
@@ -436,21 +430,23 @@ class Output:
                 def __enter__(inner_self):
                     self._plain_print(f"{description}")
                     return inner_self
+
                 def __exit__(inner_self, *args):
                     pass
+
             return DummyProgress()
         else:
             return Progress(
                 SpinnerColumn(),
                 TextColumn("[progress.description]{task.description}"),
                 console=self._console,
-                transient=True
+                transient=True,
             )
 
     def loading(self, message: str = "Loading...", spinner: str = "dots"):
         """
         Show a loading spinner.
-        
+
         Returns:
             Context manager for loading display
         """
@@ -460,15 +456,14 @@ class Output:
                 def __enter__(inner_self):
                     self._plain_print(f"{message}")
                     return inner_self
+
                 def __exit__(inner_self, *args):
                     pass
+
             return DummyLoading()
         else:
             style = self._theme.style("info")
-            return self._console.status(
-                f"[{style}]{message}[/]",
-                spinner=spinner
-            )
+            return self._console.status(f"[{style}]{message}[/]", spinner=spinner)
 
     # ─────────────────────────── Special Outputs ────────────────────────
 
@@ -487,15 +482,12 @@ class Output:
             if not self._theme.should_show_icons() and title:
                 # Remove common emoji patterns from title
                 import re
-                title = re.sub(r'[^\x00-\x7F]+', '', title).strip()
+
+                title = re.sub(r"[^\x00-\x7F]+", "", title).strip()
                 if not title:
                     title = "You"
 
-            self.panel(
-                Text(message or "[No Message]"),
-                title=title,
-                style=style_info.get("border_style", "yellow")
-            )
+            self.panel(Text(message or "[No Message]"), title=title, style=style_info.get("border_style", "yellow"))
 
     def assistant_message(self, message: str, elapsed: float | None = None):
         """Display an assistant message."""
@@ -514,7 +506,8 @@ class Output:
             if not self._theme.should_show_icons() and title:
                 # Remove common emoji patterns from title
                 import re
-                title = re.sub(r'[^\x00-\x7F]+', '', title).strip()
+
+                title = re.sub(r"[^\x00-\x7F]+", "", title).strip()
                 if not title:
                     title = "Assistant"
 
@@ -525,12 +518,7 @@ class Output:
             except Exception:
                 content = Text(message or "[No Response]")
 
-            self.panel(
-                content,
-                title=title,
-                subtitle=subtitle,
-                style=style_info.get("border_style", "blue")
-            )
+            self.panel(content, title=title, subtitle=subtitle, style=style_info.get("border_style", "blue"))
 
     def tool_call(self, tool_name: str, arguments: Any = None):
         """Display a tool call."""
@@ -539,10 +527,11 @@ class Output:
             self._plain_print(f"\nTool: {tool_name}")
             if arguments:
                 import json
+
                 try:
                     args_str = json.dumps(arguments, indent=2)
                     # Indent each line
-                    for line in args_str.split('\n'):
+                    for line in args_str.split("\n"):
                         self._plain_print(f"  {line}")
                 except Exception:
                     self._plain_print(f"  Args: {arguments}")
@@ -551,9 +540,10 @@ class Output:
             self._console.print(f"\n[magenta]Tool:[/] {tool_name}")
             if arguments:
                 import json
+
                 try:
                     args_str = json.dumps(arguments, indent=2)
-                    for line in args_str.split('\n'):
+                    for line in args_str.split("\n"):
                         self._console.print(f"  [dim]{line}[/]")
                 except Exception:
                     self._console.print(f"  [dim]Args: {arguments}[/]")
@@ -564,23 +554,21 @@ class Output:
             if not self._theme.should_show_icons() and title:
                 # Remove common emoji patterns from title
                 import re
-                title = re.sub(r'[^\x00-\x7F]+', '', title).strip()
+
+                title = re.sub(r"[^\x00-\x7F]+", "", title).strip()
                 if not title:
                     title = "Tool Invocation"
 
             if arguments:
                 import json
+
                 try:
                     args_str = json.dumps(arguments, indent=2)
                 except Exception:
                     args_str = str(arguments)
 
                 content = f"**Tool:** {tool_name}\n```json\n{args_str}\n```"
-                self.panel(
-                    Markdown(content),
-                    title=title,
-                    style=style_info.get("border_style", "magenta")
-                )
+                self.panel(Markdown(content), title=title, style=style_info.get("border_style", "magenta"))
             else:
                 self.info(f"Calling tool: {tool_name}")
 
@@ -590,9 +578,9 @@ class Output:
     def tree(self, data: dict, title: str | None = None, **kwargs):
         """
         Display hierarchical data as a tree.
-        
+
         Delegates to formatters.format_tree for consistent implementation.
-        
+
         Args:
             data: Nested dictionary to display as tree
             title: Optional title for the tree
@@ -600,6 +588,7 @@ class Output:
         """
         if not self._quiet:
             from chuk_term.ui.formatters import format_tree
+
             result = format_tree(data, title=title, **kwargs)
             if isinstance(result, str):
                 self._plain_print(result)
@@ -609,10 +598,10 @@ class Output:
     # ─────────────────────────── Simple Formatting ──────────────────────
     # These provide simpler alternatives to complex formatters
 
-    def list_items(self, items: list[Any], style: str = "bullet", indent: int = 0, **kwargs):
+    def list_items(self, items: list[Any], style: str = "bullet", indent: int = 0, **kwargs):  # noqa: ARG002
         """
         Display a formatted list.
-        
+
         Args:
             items: List of items to display
             style: List style ('bullet', 'number', 'check', 'arrow')
@@ -628,10 +617,7 @@ class Output:
                     if style == "number":
                         prefix = f"{i+1}."
                     elif style == "check":
-                        if isinstance(item, dict):
-                            prefix = "[x]" if item.get("checked", False) else "[ ]"
-                        else:
-                            prefix = "[ ]"
+                        prefix = ("[x]" if item.get("checked", False) else "[ ]") if isinstance(item, dict) else "[ ]"
                     elif style == "arrow":
                         prefix = "->"
                     else:  # bullet
@@ -655,12 +641,12 @@ class Output:
                     text = item.get("text", str(item)) if isinstance(item, dict) else str(item)
                     self._console.print(f"{indent_str}{prefix} {text}")
 
-    def json(self, data: Any, indent: int = 2, syntax_highlight: bool = True, **kwargs):
+    def json(self, data: Any, indent: int = 2, syntax_highlight: bool = True, **kwargs):  # noqa: ARG002
         """
         Display formatted JSON.
-        
+
         Delegates to formatters.format_json for consistent implementation.
-        
+
         Args:
             data: Data to display as JSON
             indent: Indentation level
@@ -669,6 +655,7 @@ class Output:
         """
         if not self._quiet:
             from chuk_term.ui.formatters import format_json
+
             result = format_json(data, syntax_highlight=syntax_highlight, **kwargs)
             if isinstance(result, str):
                 self._plain_print(result)
@@ -678,9 +665,9 @@ class Output:
     def code(self, code: str, language: str = "python", line_numbers: bool = False, **kwargs):
         """
         Display syntax-highlighted code.
-        
+
         Delegates to code.display_code for consistent implementation.
-        
+
         Args:
             code: Code to display
             language: Programming language for highlighting
@@ -689,12 +676,13 @@ class Output:
         """
         if not self._quiet:
             from chuk_term.ui.code import display_code
+
             display_code(code, language, line_numbers=line_numbers, **kwargs)
 
-    def kvpairs(self, data: dict[str, Any], align: bool = True, **kwargs):
+    def kvpairs(self, data: dict[str, Any], align: bool = True, **kwargs):  # noqa: ARG002
         """
         Display key-value pairs in aligned format.
-        
+
         Args:
             data: Dictionary of key-value pairs
             align: Whether to align values
@@ -704,10 +692,7 @@ class Output:
             if not data:
                 return
 
-            if align:
-                max_key_len = max(len(str(k)) for k in data)
-            else:
-                max_key_len = 0
+            max_key_len = max(len(str(k)) for k in data) if align else 0
 
             if self._theme.is_minimal():
                 for key, value in data.items():
@@ -722,10 +707,10 @@ class Output:
                     else:
                         self._console.print(f"[cyan]{key}[/cyan]: {value}")
 
-    def columns(self, data: list[list[str]], headers: list[str] | None = None, **kwargs):
+    def columns(self, data: list[list[str]], headers: list[str] | None = None, **kwargs):  # noqa: ARG002
         """
         Display data in columns without full table borders.
-        
+
         Args:
             data: List of rows, each row is a list of column values
             headers: Optional column headers
@@ -768,7 +753,7 @@ class Output:
                     for header in headers:
                         table.add_column(header)
                 else:
-                    for i in range(num_cols):
+                    for _ in range(num_cols):
                         table.add_column()
 
                 for row in data:
@@ -800,11 +785,11 @@ class Output:
     def prompt(self, message: str, default: str | None = None) -> str:
         """
         Prompt user for input.
-        
+
         Args:
             message: Prompt message
             default: Default value
-            
+
         Returns:
             User input
         """
@@ -819,16 +804,17 @@ class Output:
             return result if result else default
         else:
             from rich.prompt import Prompt
+
             return Prompt.ask(message, default=default, console=self._console)
 
     def confirm(self, message: str, default: bool = False) -> bool:
         """
         Ask user for confirmation.
-        
+
         Args:
             message: Confirmation message
             default: Default value
-            
+
         Returns:
             True if confirmed
         """
@@ -839,9 +825,10 @@ class Output:
 
             if not result:
                 return default
-            return result in ('y', 'yes')
+            return result in ("y", "yes")
         else:
             from rich.prompt import Confirm
+
             return Confirm.ask(message, default=default, console=self._console)
 
     def get_raw_console(self) -> Console:
@@ -854,62 +841,77 @@ class Output:
 # Create singleton instance
 ui = Output()
 
+
 def get_output() -> Output:
     """Get the singleton output instance."""
     # Always refresh theme reference
     from chuk_term.ui.theme import get_theme
+
     ui._theme = get_theme()
     ui._update_console_for_theme()
     return ui
+
 
 # Direct access convenience functions
 def print(*args, **kwargs):
     """Print to output."""
     ui.print(*args, **kwargs)
 
+
 def debug(message: str, **kwargs):
     """Print debug message."""
     ui.debug(message, **kwargs)
+
 
 def info(message: str, **kwargs):
     """Print info message."""
     ui.info(message, **kwargs)
 
+
 def success(message: str, **kwargs):
     """Print success message."""
     ui.success(message, **kwargs)
+
 
 def warning(message: str, **kwargs):
     """Print warning message."""
     ui.warning(message, **kwargs)
 
+
 def error(message: str, **kwargs):
     """Print error message."""
     ui.error(message, **kwargs)
+
 
 def fatal(message: str, **kwargs):
     """Print fatal error message."""
     ui.fatal(message, **kwargs)
 
+
 def tip(message: str, **kwargs):
     """Print a tip."""
     ui.tip(message, **kwargs)
+
 
 def hint(message: str, **kwargs):
     """Print a hint."""
     ui.hint(message, **kwargs)
 
+
 def status(message: str, **kwargs):
     """Print a status message."""
     ui.status(message, **kwargs)
+
 
 def command(cmd: str, description: str = "", **kwargs):
     """Print a command suggestion."""
     ui.command(cmd, description, **kwargs)
 
+
 def clear():
     """Clear the screen."""
     ui.clear()
+
 
 def rule(title: str = "", **kwargs):
     """Print a horizontal rule."""

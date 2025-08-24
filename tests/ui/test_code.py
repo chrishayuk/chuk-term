@@ -1,5 +1,7 @@
 """Unit tests for code display module."""
 
+# ruff: noqa: ARG002
+
 from unittest.mock import patch
 
 import pytest
@@ -33,7 +35,7 @@ def default_theme():
 @pytest.fixture
 def mock_ui():
     """Mock the ui output object."""
-    with patch('chuk_term.ui.code.ui') as mock:
+    with patch("chuk_term.ui.code.ui") as mock:
         yield mock
 
 
@@ -129,14 +131,7 @@ class TestDisplayCodeReview:
     def test_display_code_review_minimal(self, minimal_theme, mock_ui):
         """Test code review in minimal theme."""
         code = "def func():\n    pass"
-        comments = [
-            {
-                "line": 1,
-                "type": "error",
-                "message": "Missing docstring",
-                "suggestion": "Add a docstring"
-            }
-        ]
+        comments = [{"line": 1, "type": "error", "message": "Missing docstring", "suggestion": "Add a docstring"}]
 
         display_code_review(code, comments)
 
@@ -151,7 +146,7 @@ class TestDisplayCodeReview:
             {"line": 1, "type": "error", "message": "Error here"},
             {"line": 1, "type": "warning", "message": "Warning here"},
             {"line": 1, "type": "info", "message": "Info here"},
-            {"line": 1, "type": "suggestion", "message": "Suggestion here"}
+            {"line": 1, "type": "suggestion", "message": "Suggestion here"},
         ]
 
         display_code_review(code, comments)
@@ -166,12 +161,7 @@ class TestDisplayCodeAnalysis:
 
     def test_display_code_analysis_minimal(self, minimal_theme, mock_ui):
         """Test code analysis in minimal theme."""
-        metrics = {
-            "lines": 100,
-            "functions": 10,
-            "complexity": 5,
-            "coverage": 85
-        }
+        metrics = {"lines": 100, "functions": 10, "complexity": 5, "coverage": 85}
 
         display_code_analysis(metrics)
 
@@ -184,12 +174,8 @@ class TestDisplayCodeAnalysis:
         """Test code analysis with issues."""
         metrics = {
             "complexity": 25,  # High complexity
-            "coverage": 50,    # Low coverage
-            "issues": [
-                {"severity": "high"},
-                {"severity": "high"},
-                {"severity": "medium"}
-            ]
+            "coverage": 50,  # Low coverage
+            "issues": [{"severity": "high"}, {"severity": "high"}, {"severity": "medium"}],
         }
 
         display_code_analysis(metrics, show_recommendations=True)
@@ -232,11 +218,7 @@ class TestDisplaySideBySide:
         left = "def old():\n    pass"
         right = "def new():\n    return None"
 
-        display_side_by_side(
-            left, right,
-            left_title="Original",
-            right_title="Updated"
-        )
+        display_side_by_side(left, right, left_title="Original", right_title="Updated")
 
         # Rich theme creates a table
         calls = mock_ui.print.call_args_list
@@ -268,14 +250,7 @@ class TestDisplayFileTree:
 
     def test_display_file_tree_minimal(self, minimal_theme, mock_ui):
         """Test file tree in minimal theme."""
-        tree_data = {
-            "src": {
-                "main.py": "1KB",
-                "lib": {
-                    "utils.py": "2KB"
-                }
-            }
-        }
+        tree_data = {"src": {"main.py": "1KB", "lib": {"utils.py": "2KB"}}}
 
         display_file_tree(tree_data)
 
@@ -286,10 +261,7 @@ class TestDisplayFileTree:
 
     def test_display_file_tree_with_sizes(self, minimal_theme, mock_ui):
         """Test file tree with file sizes."""
-        tree_data = {
-            "file1.txt": "10KB",
-            "file2.txt": "20KB"
-        }
+        tree_data = {"file1.txt": "10KB", "file2.txt": "20KB"}
 
         display_file_tree(tree_data, show_sizes=True)
 
@@ -310,12 +282,7 @@ class TestDisplayFileTree:
 
     def test_display_file_tree_rich_with_icons(self, default_theme, mock_ui):
         """Test file tree in rich theme with icons."""
-        tree_data = {
-            "docs": {
-                "readme.md": None,
-                "images": {}
-            }
-        }
+        tree_data = {"docs": {"readme.md": None, "images": {}}}
 
         display_file_tree(tree_data, show_icons=True)
 

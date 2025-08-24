@@ -22,20 +22,17 @@ from chuk_term.ui.theme import get_theme
 
 
 def format_tool_call(
-    tool_name: str,
-    arguments: dict[str, Any],
-    include_description: bool = False,
-    description: str | None = None
+    tool_name: str, arguments: dict[str, Any], include_description: bool = False, description: str | None = None
 ) -> Markdown | str:
     """
     Format a tool call for display.
-    
+
     Args:
         tool_name: Name of the tool
         arguments: Tool arguments
         include_description: Include tool description
         description: Tool description text
-        
+
     Returns:
         Formatted content (Markdown or plain string for minimal/terminal)
     """
@@ -79,19 +76,15 @@ def format_tool_call(
     return Markdown("\n".join(parts))
 
 
-def format_tool_result(
-    result: Any,
-    success: bool = True,
-    execution_time: float | None = None
-) -> Markdown | Text | str:
+def format_tool_result(result: Any, success: bool = True, execution_time: float | None = None) -> Markdown | Text | str:
     """
     Format a tool execution result.
-    
+
     Args:
         result: Tool execution result
         success: Whether execution was successful
         execution_time: Execution time in seconds
-        
+
     Returns:
         Formatted content
     """
@@ -99,16 +92,13 @@ def format_tool_result(
 
     # Minimal/Terminal mode
     if theme.name in ("minimal", "terminal"):
-        if success:
-            prefix = "Success"
-        else:
-            prefix = "Failed"
+        prefix = "Success" if success else "Failed"
 
         time_str = f" ({execution_time:.2f}s)" if execution_time else ""
         header = f"{prefix}{time_str}\n\n"
 
         # Format result
-        if isinstance(result, (dict, list)):
+        if isinstance(result, dict | list):
             try:
                 result_json = json.dumps(result, indent=2)
                 return f"{header}{result_json}"
@@ -134,7 +124,7 @@ def format_tool_result(
     text.append("\n\n")
 
     # Format result based on type
-    if isinstance(result, dict) or isinstance(result, list):
+    if isinstance(result, dict | list):
         try:
             result_json = json.dumps(result, indent=2)
             return Markdown(f"{text}\n```json\n{result_json}\n```")
@@ -150,17 +140,17 @@ def format_error(
     *,
     include_traceback: bool = False,
     context: str | None = None,
-    suggestions: list[str] | None = None
+    suggestions: list[str] | None = None,
 ) -> Text | str:
     """
     Format an error for display.
-    
+
     Args:
         error: Exception to format
         include_traceback: Include full traceback
         context: Error context
         suggestions: Suggestions for resolution
-        
+
     Returns:
         Formatted error text
     """
@@ -210,20 +200,15 @@ def format_error(
     return text
 
 
-def format_json(
-    data: Any,
-    *,
-    title: str | None = None,
-    syntax_highlight: bool = True
-) -> Syntax | Markdown | str:
+def format_json(data: Any, *, title: str | None = None, syntax_highlight: bool = True) -> Syntax | Markdown | str:
     """
     Format JSON data for display.
-    
+
     Args:
         data: Data to format as JSON
         title: Optional title
         syntax_highlight: Use syntax highlighting
-        
+
     Returns:
         Formatted JSON display
     """
@@ -258,17 +243,17 @@ def format_table(
     *,
     title: str | None = None,
     columns: list[str] | None = None,
-    max_rows: int | None = None
+    max_rows: int | None = None,
 ) -> Table | str:
     """
     Format data as a table.
-    
+
     Args:
         data: List of dictionaries to display
         title: Table title
         columns: Specific columns to display (None = all)
         max_rows: Maximum rows to display
-        
+
     Returns:
         Formatted table or plain text for minimal/terminal theme
     """
@@ -283,11 +268,7 @@ def format_table(
             return table
 
     # Determine columns
-    if columns:
-        cols = columns
-    else:
-        # Get all unique keys
-        cols = list(set(key for row in data for key in row.keys()))
+    cols = columns or list({key for row in data for key in row})
 
     # For minimal/terminal theme, return plain text table
     if theme.name in ("minimal", "terminal"):
@@ -314,8 +295,8 @@ def format_table(
                 value = str(row.get(col, ""))
                 # Replace unicode symbols with ASCII for minimal theme only
                 if theme.name == "minimal":
-                    value = (value
-                        .replace("✓", "OK")
+                    value = (
+                        value.replace("✓", "OK")
                         .replace("✔", "OK")
                         .replace("✗", "X")
                         .replace("✘", "X")
@@ -359,20 +340,15 @@ def format_table(
     return table
 
 
-def format_tree(
-    data: dict[str, Any],
-    *,
-    title: str | None = None,
-    max_depth: int | None = None
-) -> Tree | str:
+def format_tree(data: dict[str, Any], *, title: str | None = None, max_depth: int | None = None) -> Tree | str:
     """
     Format hierarchical data as a tree.
-    
+
     Args:
         data: Hierarchical data
         title: Tree title
         max_depth: Maximum depth to display
-        
+
     Returns:
         Formatted tree or plain text for minimal/terminal
     """
@@ -393,11 +369,7 @@ def format_tree(
 
 
 def _build_text_tree(
-    lines: list[str],
-    data: Any,
-    indent: str = "",
-    current_depth: int = 0,
-    max_depth: int | None = None
+    lines: list[str], data: Any, indent: str = "", current_depth: int = 0, max_depth: int | None = None
 ) -> None:
     """Build plain text tree structure."""
     if max_depth and current_depth >= max_depth:
@@ -406,14 +378,14 @@ def _build_text_tree(
 
     if isinstance(data, dict):
         for key, value in data.items():
-            if isinstance(value, (dict, list)):
+            if isinstance(value, dict | list):
                 lines.append(f"{indent}{key}:")
                 _build_text_tree(lines, value, indent + "  ", current_depth + 1, max_depth)
             else:
                 lines.append(f"{indent}{key}: {value}")
     elif isinstance(data, list):
         for i, item in enumerate(data):
-            if isinstance(item, (dict, list)):
+            if isinstance(item, dict | list):
                 lines.append(f"{indent}[{i}]:")
                 _build_text_tree(lines, item, indent + "  ", current_depth + 1, max_depth)
             else:
@@ -422,12 +394,7 @@ def _build_text_tree(
         lines.append(f"{indent}{str(data)}")
 
 
-def _build_tree(
-    tree: Tree,
-    data: Any,
-    current_depth: int = 0,
-    max_depth: int | None = None
-) -> None:
+def _build_tree(tree: Tree, data: Any, current_depth: int = 0, max_depth: int | None = None) -> None:
     """Recursively build tree structure."""
     if max_depth and current_depth >= max_depth:
         tree.add("...")
@@ -435,14 +402,14 @@ def _build_tree(
 
     if isinstance(data, dict):
         for key, value in data.items():
-            if isinstance(value, (dict, list)):
+            if isinstance(value, dict | list):
                 branch = tree.add(f"[bold cyan]{key}[/]")
                 _build_tree(branch, value, current_depth + 1, max_depth)
             else:
                 tree.add(f"[cyan]{key}[/]: {value}")
     elif isinstance(data, list):
         for i, item in enumerate(data):
-            if isinstance(item, (dict, list)):
+            if isinstance(item, dict | list):
                 branch = tree.add(f"[bold yellow][{i}][/]")
                 _build_tree(branch, item, current_depth + 1, max_depth)
             else:
@@ -452,21 +419,17 @@ def _build_tree(
 
 
 def format_timestamp(
-    dt: datetime | None = None,
-    *,
-    include_date: bool = True,
-    include_time: bool = True,
-    relative: bool = False
+    dt: datetime | None = None, *, include_date: bool = True, include_time: bool = True, relative: bool = False
 ) -> str:
     """
     Format a timestamp for display.
-    
+
     Args:
         dt: Datetime to format (None = now)
         include_date: Include date portion
         include_time: Include time portion
         relative: Show relative time (e.g., "2 hours ago")
-        
+
     Returns:
         Formatted timestamp
     """
@@ -506,21 +469,17 @@ def _format_relative_time(dt: datetime) -> str:
 
 
 def format_diff(
-    old: str,
-    new: str,
-    *,
-    title: str | None = None,
-    syntax: str | None = None
+    old: str, new: str, *, title: str | None = None, syntax: str | None = None  # noqa: ARG001
 ) -> Syntax | str:
     """
     Format a diff between two strings.
-    
+
     Args:
         old: Original text
         new: New text
         title: Diff title
         syntax: Syntax highlighting language
-        
+
     Returns:
         Formatted diff
     """
@@ -529,10 +488,7 @@ def format_diff(
     theme = get_theme()
 
     diff = difflib.unified_diff(
-        old.splitlines(keepends=True),
-        new.splitlines(keepends=True),
-        fromfile="old",
-        tofile="new"
+        old.splitlines(keepends=True), new.splitlines(keepends=True), fromfile="old", tofile="new"
     )
 
     diff_text = "".join(diff)
@@ -544,10 +500,4 @@ def format_diff(
         return diff_text
 
     # Rich mode - return Syntax object
-    return Syntax(
-        diff_text,
-        "diff",
-        theme="monokai",
-        line_numbers=True,
-        word_wrap=True
-    )
+    return Syntax(diff_text, "diff", theme="monokai", line_numbers=True, word_wrap=True)

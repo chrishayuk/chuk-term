@@ -4,44 +4,70 @@ A modern terminal library with a powerful CLI interface for building beautiful t
 
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Test Coverage](https://img.shields.io/badge/coverage-71%25-yellow.svg)](docs/testing/TEST_COVERAGE.md)
+[![Tests](https://img.shields.io/badge/tests-351%20passed-green.svg)](docs/testing/UNIT_TESTING.md)
 
 ## ✨ Features
 
 - 🎨 **Rich UI Components**: Banners, prompts, formatters, and code display with syntax highlighting
 - 🎯 **Centralized Output Management**: Consistent console output with multiple log levels
-- 🎭 **Theme Support**: 7+ built-in themes including monokai, dracula, solarized, minimal, and terminal
+- 🎭 **Theme Support**: 8 built-in themes including default, dark, light, minimal, terminal, monokai, dracula, and solarized
 - 📝 **Code Display**: Syntax highlighting, diffs, code reviews, and side-by-side comparisons
 - 🔧 **Terminal Management**: Screen control, cursor management, hyperlinks, and color detection
 - 💬 **Interactive Prompts**: Text input, confirmations, number input, single/multi selection menus
 - 📊 **Data Formatting**: Tables, trees, JSON, timestamps, and structured output
+- 🤖 **AI-Friendly**: Designed for AI agents with comprehensive docs and consistent APIs
+- 🔄 **Environment Adaptation**: Automatically adapts to TTY, CI, and NO_COLOR environments
 
 ## 📦 Installation
 
 ### Using uv (Recommended)
 
 ```bash
-# Install the package
+# Install as dependency
 uv add chuk-term
 
-# Install for development
-git clone https://github.com/yourusername/chuk-term.git
-cd chuk-term
-uv sync --dev
+# Install globally as tool
+uv tool install chuk-term
 ```
 
 ### Using pip
 
 ```bash
-# Install from PyPI (when published)
+# Install from PyPI
 pip install chuk-term
 
-# Install from source
-git clone https://github.com/yourusername/chuk-term.git
-cd chuk-term
-pip install -e ".[dev]"
+# With development dependencies
+pip install chuk-term[dev]
 ```
 
+### From Source (Development)
+
+```bash
+# Clone the repository
+git clone https://github.com/yourusername/chuk-term.git
+cd chuk-term
+
+# Install with uv (recommended)
+uv sync --dev
+
+# Or with pip
+pip install -e ".[dev]"
+
+# Verify installation
+chuk-term --version
+```
+
+For detailed installation instructions, see the [Getting Started Guide](docs/ui/GETTING_STARTED.md#installation).
+
 ## 🚀 Quick Start
+
+### For AI Agents and LLMs
+
+ChukTerm is designed to be AI-friendly. For comprehensive guidance:
+- 📖 Read the [Getting Started Guide](docs/ui/GETTING_STARTED.md)
+- 🤖 Check [llms.txt](llms.txt) for LLM-optimized documentation
+- 📚 Browse [examples](examples/) for working code
 
 ### Basic Output
 
@@ -195,6 +221,11 @@ make clean       # Remove build artifacts
 
 ## 📚 Documentation
 
+### Quick Start
+- 🚀 **[Getting Started Guide](docs/ui/GETTING_STARTED.md)** - Installation, examples, and best practices
+- 🤖 **[LLM Documentation](llms.txt)** - AI-optimized reference (llmstxt.org)
+- 📂 **[Examples Directory](examples/)** - Working code examples
+
 ### Core Documentation
 - [Output Management](docs/ui/output.md) - Centralized console output system
 - [Terminal Management](docs/ui/terminal.md) - Terminal control and state management
@@ -202,6 +233,7 @@ make clean       # Remove build artifacts
 - [Package Management](docs/PACKAGE_MANAGEMENT.md) - Using uv for dependency management
 - [Unit Testing](docs/testing/UNIT_TESTING.md) - Testing guidelines and best practices
 - [Test Coverage](docs/testing/TEST_COVERAGE.md) - Coverage requirements and reports
+- [Code Quality](docs/testing/CODE_QUALITY.md) - Linting, formatting, and quality standards
 
 ### API Reference
 
@@ -250,17 +282,21 @@ chuk-term/
 │   ├── __init__.py        # Package metadata
 │   ├── cli.py             # CLI interface
 │   └── ui/                # UI components
-│       ├── output.py      # Output management
+│       ├── output.py      # Output management (singleton)
 │       ├── terminal.py    # Terminal control
-│       ├── theme.py       # Theme system
+│       ├── theme.py       # Theme system (8 themes)
 │       ├── prompts.py     # User prompts
 │       ├── formatters.py  # Data formatters
 │       ├── code.py        # Code display
 │       └── banners.py     # Banner displays
-├── tests/                 # Test suite
+├── tests/                 # Test suite (351 tests)
 ├── examples/              # Example scripts
 ├── docs/                  # Documentation
-└── pyproject.toml         # Package configuration
+│   └── ui/
+│       └── GETTING_STARTED.md  # Quick start guide
+├── llms.txt              # LLM-optimized docs
+├── CLAUDE.md             # Project context
+└── pyproject.toml        # Package configuration
 ```
 
 ## 🤝 Contributing

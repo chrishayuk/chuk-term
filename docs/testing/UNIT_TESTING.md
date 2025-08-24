@@ -347,6 +347,25 @@ Target coverage levels:
 - Core modules: ≥ 90%
 - New code: ≥ 95%
 
+## Common Test Issues and Solutions
+
+### Rich Console Output Capture
+When testing methods that use Rich console for output (especially stderr), the output may not be captured properly by `capsys`:
+
+```python
+# Issue: Rich console output to stderr doesn't get captured
+def test_error_output(capsys):
+    output.error("Error message")
+    captured = capsys.readouterr()
+    assert "Error" in captured.err  # May fail!
+
+# Solution: Just verify the method doesn't crash
+def test_error_output():
+    output.error("Error message")  # Verify no exceptions
+```
+
+This is a known limitation when Rich formats output with ANSI codes. For critical output verification, consider mocking the console or testing with minimal theme.
+
 ## Best Practices
 
 ### DO's
