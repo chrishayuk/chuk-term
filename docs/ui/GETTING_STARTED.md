@@ -226,7 +226,36 @@ modified = "Hello ChukTerm!"
 display_diff(original, modified, title="Changes")
 ```
 
-### Pattern 4: Structured Data Display
+### Pattern 4: Streaming Messages for Real-Time Updates
+```python
+from chuk_term.ui.streaming import StreamingMessage, StreamingAssistant
+import asyncio
+
+# Basic streaming message
+with StreamingMessage(title="🤖 Processing") as stream:
+    stream.update("Analyzing data")
+    # Simulate processing
+    stream.update("...")
+    stream.update(" Complete!")
+
+# Using StreamingAssistant for LLM-style responses
+async def stream_response():
+    assistant = StreamingAssistant()
+    stream = assistant.start()
+    
+    # Simulate token streaming
+    response = "I'll help you understand streaming in ChukTerm."
+    for word in response.split():
+        assistant.update(word + " ")
+        await asyncio.sleep(0.1)
+    
+    assistant.finalize()
+
+# Run async example
+asyncio.run(stream_response())
+```
+
+### Pattern 5: Structured Data Display
 ```python
 from chuk_term.ui import output
 

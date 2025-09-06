@@ -16,6 +16,7 @@ A modern terminal library with a powerful CLI interface for building beautiful t
 - 🔧 **Terminal Management**: Screen control, cursor management, hyperlinks, and color detection
 - 💬 **Interactive Prompts**: Text input, confirmations, number input, single/multi selection menus
 - 📊 **Data Formatting**: Tables, trees, JSON, timestamps, and structured output
+- 🌊 **Streaming Support**: Live-updating messages for real-time content streaming (LLM-style)
 - 🤖 **AI-Friendly**: Designed for AI agents with comprehensive docs and consistent APIs
 - 🔄 **Environment Adaptation**: Automatically adapts to TTY, CI, and NO_COLOR environments
 
@@ -125,6 +126,30 @@ display_diff(
     new_text="Hello ChukTerm!",
     title="Changes"
 )
+```
+
+### Streaming Messages (New!)
+
+```python
+from chuk_term.ui.streaming import StreamingMessage, StreamingAssistant
+import time
+
+# Basic streaming message
+with StreamingMessage(title="🤖 Assistant") as stream:
+    stream.update("Processing your request")
+    time.sleep(0.5)
+    stream.update("...")
+    time.sleep(0.5)
+    stream.update(" Done!")
+# Automatically finalizes with Markdown rendering
+
+# Using StreamingAssistant for simpler API
+assistant = StreamingAssistant()
+stream = assistant.start()
+for word in "Hello from ChukTerm streaming!".split():
+    assistant.update(word + " ")
+    time.sleep(0.2)
+assistant.finalize()
 ```
 
 ### Theme Support
@@ -263,15 +288,25 @@ The [examples](examples/) directory contains demonstration scripts:
 |------|-------------|
 | `ui_demo.py` | Comprehensive UI component showcase |
 | `ui_code_demo.py` | Code display and syntax highlighting |
-| `ui_streaming_demo.py` | Streaming and real-time output |
-| `ui_theme_independence.py` | Theme system demonstration |
 | `ui_output_demo.py` | Output management features |
 | `ui_terminal_demo.py` | Terminal control capabilities |
+| `ui_theme_independence.py` | Theme system demonstration |
+| **Streaming Demos** | |
+| `ui_streaming_demo.py` | Advanced streaming UI capabilities |
+| `ui_streaming_message_demo.py` | StreamingMessage and StreamingAssistant demos |
+| `ui_streaming_practical_demo.py` | Real-world streaming use cases |
+| `ui_streaming_quickstart.py` | Simple streaming examples to get started |
+| **Other** | |
 | `ui_quick_test.py` | Quick functionality test |
 
 Run any example:
 ```bash
+# Run the main demo
 uv run python examples/ui_demo.py
+
+# Try the streaming demos
+uv run python examples/ui_streaming_quickstart.py
+uv run python examples/ui_streaming_practical_demo.py
 ```
 
 ## 🏗️ Project Structure
@@ -288,9 +323,13 @@ chuk-term/
 │       ├── prompts.py     # User prompts
 │       ├── formatters.py  # Data formatters
 │       ├── code.py        # Code display
-│       └── banners.py     # Banner displays
+│       ├── banners.py     # Banner displays
+│       └── streaming.py   # Streaming message support
 ├── tests/                 # Test suite (351 tests)
 ├── examples/              # Example scripts
+│   ├── ui_demo.py
+│   ├── ui_streaming_*.py # Streaming demonstrations
+│   └── ...
 ├── docs/                  # Documentation
 │   └── ui/
 │       └── GETTING_STARTED.md  # Quick start guide

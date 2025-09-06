@@ -75,6 +75,12 @@ from chuk_term.ui.prompts import (
     select_multiple,
 )
 
+# Streaming support
+from chuk_term.ui.streaming import (
+    StreamingAssistant,
+    StreamingMessage,
+)
+
 # Terminal management
 from chuk_term.ui.terminal import (
     TerminalManager,
@@ -147,4 +153,7 @@ __all__ = [
     "display_side_by_side",
     "display_file_tree",
     "format_code_snippet",
+    # Streaming
+    "StreamingMessage",
+    "StreamingAssistant",
 ]

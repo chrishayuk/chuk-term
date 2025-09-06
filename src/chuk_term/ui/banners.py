@@ -279,7 +279,7 @@ def display_success_banner(message: str, details: dict[str, Any] | None = None) 
 
     # Minimal mode
     if theme.name == "minimal":
-        ui.print(f"\nSUCCESS: {message}")
+        ui.success(f"SUCCESS: {message}")
         if details:
             for key, value in details.items():
                 ui.print(f"  {key}: {value}")
@@ -339,11 +339,20 @@ def _build_banner_content(
 # Backward compatibility
 def display_welcome_banner(ctx: dict[str, Any]) -> None:
     """Legacy function for backward compatibility."""
-    provider = ctx.get("provider", "unknown")
-    model = ctx.get("model", "unknown")
+    mode = ctx.get("mode", "chat")
 
-    # Determine which banner to show based on context
-    if ctx.get("mode") == "interactive":
-        display_interactive_banner(provider, model)
+    if mode == "interactive":
+        provider = ctx.get("provider", "unknown")
+        model = ctx.get("model", "unknown")
+        tool_count = ctx.get("tool_count")
+        display_interactive_banner(provider, model, tool_count=tool_count)
+    elif mode == "diagnostic":
+        test_name = ctx.get("test_name", "Unknown Test")
+        description = ctx.get("description", "No description")
+        parameters = ctx.get("parameters")
+        display_diagnostic_banner(test_name, description, parameters)
     else:
+        # Default to chat mode
+        provider = ctx.get("provider", "unknown")
+        model = ctx.get("model", "unknown")
         display_chat_banner(provider, model)

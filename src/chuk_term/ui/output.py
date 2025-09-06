@@ -349,7 +349,9 @@ class Output:
                 self._plain_print("")
             else:
                 # Normal mode - show panel
-                self._console.print(Panel(content, title=title, border_style=style, **kwargs))
+                # Remove border_style from kwargs if present to avoid conflict
+                panel_kwargs = {k: v for k, v in kwargs.items() if k != "border_style"}
+                self._console.print(Panel(content, title=title, border_style=style, **panel_kwargs))
 
     def markdown(self, text: str, **kwargs):
         """Print markdown formatted text."""
@@ -518,7 +520,13 @@ class Output:
             except Exception:
                 content = Text(message or "[No Response]")
 
-            self.panel(content, title=title, subtitle=subtitle, style=style_info.get("border_style", "blue"))
+            self.panel(
+                content,
+                title=title,
+                subtitle=subtitle,
+                border_style=style_info.get("border_style", "blue"),
+                expand=False,
+            )
 
     def tool_call(self, tool_name: str, arguments: Any = None):
         """Display a tool call."""
