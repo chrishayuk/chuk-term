@@ -57,6 +57,7 @@ class Output:
                 no_color=False,  # We'll control this based on theme
                 legacy_windows=True,
                 soft_wrap=True,
+                width=None,  # Auto-detect width, don't constrain
             )
             # Create separate console for stderr
             self._err_console = Console(
@@ -64,6 +65,7 @@ class Output:
                 no_color=False,
                 legacy_windows=True,
                 soft_wrap=True,
+                width=None,  # Auto-detect width, don't constrain
             )
             self._theme = get_theme()
             self._quiet = False
@@ -516,16 +518,18 @@ class Output:
             subtitle = f"Response time: {elapsed:.2f}s" if elapsed else None
 
             try:
-                content: Any = Markdown(message or "[No Response]")
+                # Use Text with proper overflow handling instead of Markdown
+                # to avoid truncation issues
+                content = Text(message or "[No Response]", overflow="fold", no_wrap=False)
             except Exception:
-                content = Text(message or "[No Response]")
+                content = Text(message or "[No Response]", overflow="fold", no_wrap=False)
 
             self.panel(
                 content,
                 title=title,
                 subtitle=subtitle,
                 border_style=style_info.get("border_style", "blue"),
-                expand=False,
+                expand=True,  # Allow panel to expand to full width for long content
             )
 
     def tool_call(self, tool_name: str, arguments: Any = None):

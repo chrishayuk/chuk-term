@@ -135,9 +135,10 @@ class StreamingMessage:
             # CRITICAL FIX: Ensure we use the full content, not truncated
             # Use Text with overflow handling for safety
             full_text = self.content or "[No Response]"
-            
+
             # Debug logging for panel creation
             import logging
+
             logger = logging.getLogger(__name__)
             logger.debug(f"Panel creation: full_text length: {len(full_text)}")
             try:

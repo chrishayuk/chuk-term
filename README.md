@@ -296,6 +296,7 @@ The [examples](examples/) directory contains demonstration scripts:
 | `ui_streaming_message_demo.py` | StreamingMessage and StreamingAssistant demos |
 | `ui_streaming_practical_demo.py` | Real-world streaming use cases |
 | `ui_streaming_quickstart.py` | Simple streaming examples to get started |
+| `streaming_long_text_demo.py` | Token-by-token streaming with proper wrapping |
 | **Other** | |
 | `ui_quick_test.py` | Quick functionality test |
 
