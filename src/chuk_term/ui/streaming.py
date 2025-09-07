@@ -35,6 +35,7 @@ class StreamingMessage:
         console: Console | None = None,
         title: str = "Assistant",
         show_elapsed: bool = True,
+        refresh_per_second: int = 8,
     ):
         """
         Initialize a streaming message.
@@ -43,10 +44,12 @@ class StreamingMessage:
             console: Rich console to use (creates one if None)
             title: Title for the message panel
             show_elapsed: Whether to show elapsed time
+            refresh_per_second: Refresh rate for live updates (default 8fps for smoother streaming)
         """
         self.console = console or Console()
         self.title = title
         self.show_elapsed = show_elapsed
+        self.refresh_per_second = refresh_per_second
         self.content = ""
         self.start_time: float | None = None
         self.live: Live | None = None
@@ -59,7 +62,7 @@ class StreamingMessage:
         self.live = Live(
             self._create_panel(),
             console=self.console,
-            refresh_per_second=4,
+            refresh_per_second=self.refresh_per_second,
             transient=True,  # Will be replaced by final panel
         )
         self.live.start()
@@ -132,6 +135,11 @@ class StreamingMessage:
             # CRITICAL FIX: Ensure we use the full content, not truncated
             # Use Text with overflow handling for safety
             full_text = self.content or "[No Response]"
+            
+            # Debug logging for panel creation
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.debug(f"Panel creation: full_text length: {len(full_text)}")
             try:
                 # Try Markdown first
                 content = Markdown(full_text)
