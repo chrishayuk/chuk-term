@@ -13,11 +13,15 @@ from chuk_term.ui.terminal import (
     TerminalManager,
     alternate_screen,
     bell,
+    clear_line,
+    clear_lines,
     clear_screen,
     get_terminal_info,
     get_terminal_size,
     hide_cursor,
     hyperlink,
+    move_cursor_down,
+    move_cursor_up,
     reset_terminal,
     restore_terminal,
     set_terminal_title,
@@ -908,6 +912,70 @@ class TestEnhancedFeatureEdgeCases:
         """Test hyperlink with None text."""
         link = TerminalManager.hyperlink("https://example.com", None)
         assert "https://example.com" in link
+
+
+class TestClearLines:
+    """Test multi-line clearing functionality."""
+
+    @patch("sys.stdout")
+    @patch("sys.platform", "darwin")
+    def test_clear_lines_single(self, mock_stdout):
+        """Test clearing a single line."""
+        clear_lines(1)
+
+        # Should clear 1 line and return to start
+        mock_stdout.write.assert_any_call("\033[K")
+        mock_stdout.write.assert_any_call("\r")
+        mock_stdout.flush.assert_called()
+
+    @patch("sys.stdout")
+    @patch("sys.platform", "darwin")
+    def test_clear_lines_multiple(self, mock_stdout):
+        """Test clearing multiple lines."""
+        clear_lines(3)
+
+        # Get all write calls
+        write_calls = [call[0][0] for call in mock_stdout.write.call_args_list]
+
+        # Should have 3 clear sequences
+        clear_count = sum(1 for text in write_calls if "\033[K" in text)
+        assert clear_count == 3
+
+        # Should move up (count-1) lines
+        up_count = sum(1 for text in write_calls if "\033[2A" in text)
+        assert up_count == 1
+
+        # Should end with carriage return
+        assert "\r" in write_calls
+
+        mock_stdout.flush.assert_called()
+
+    @patch("sys.stdout")
+    @patch("sys.platform", "darwin")
+    def test_clear_lines_zero(self, mock_stdout):
+        """Test clearing zero lines does nothing."""
+        clear_lines(0)
+
+        # Should not write anything
+        mock_stdout.write.assert_not_called()
+
+    @patch("sys.stdout")
+    @patch("sys.platform", "darwin")
+    def test_clear_lines_negative(self, mock_stdout):
+        """Test clearing negative lines does nothing."""
+        clear_lines(-5)
+
+        # Should not write anything
+        mock_stdout.write.assert_not_called()
+
+    @patch("sys.stdout")
+    @patch("sys.platform", "win32")
+    def test_clear_lines_windows(self, mock_stdout):
+        """Test clearing lines on Windows does nothing."""
+        clear_lines(3)
+
+        # Should not write anything on Windows
+        mock_stdout.write.assert_not_called()
 
 
 @pytest.fixture(autouse=True)

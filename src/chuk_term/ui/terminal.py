@@ -191,6 +191,34 @@ class TerminalManager:
             sys.stdout.write("\033[2K\r")
             sys.stdout.flush()
 
+    @staticmethod
+    def clear_lines(count: int) -> None:
+        """Clear multiple lines starting from current position.
+
+        Clears N lines, then returns cursor to the first line.
+        Assumes cursor is at the start of the first line.
+
+        Args:
+            count: Number of lines to clear
+        """
+        if count <= 0:
+            return
+
+        if sys.platform != "win32":
+            # Clear each line
+            for i in range(count):
+                sys.stdout.write("\033[K")  # Clear line
+                if i < count - 1:
+                    sys.stdout.write("\n")  # Move to next line
+
+            # Move back to first line
+            if count > 1:
+                sys.stdout.write(f"\033[{count - 1}A")
+
+            # Position at start of line
+            sys.stdout.write("\r")
+            sys.stdout.flush()
+
     # ─────────────────────────── Alternate Screen ───────────────────────
 
     @staticmethod
@@ -444,6 +472,22 @@ def move_cursor_down(lines: int = 1) -> None:
 def clear_line() -> None:
     """Clear the current line."""
     TerminalManager.clear_line()
+
+
+def clear_lines(count: int) -> None:
+    """Clear multiple lines starting from current position.
+
+    Clears N lines, then returns cursor to the first line.
+    Assumes cursor is at the start of the first line.
+
+    Args:
+        count: Number of lines to clear
+
+    Example:
+        >>> # Clear 3 lines of status display
+        >>> clear_lines(3)
+    """
+    TerminalManager.clear_lines(count)
 
 
 def get_terminal_info() -> dict:

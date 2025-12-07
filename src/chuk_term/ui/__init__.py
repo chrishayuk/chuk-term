@@ -84,8 +84,12 @@ from chuk_term.ui.streaming import (
 # Terminal management
 from chuk_term.ui.terminal import (
     TerminalManager,
+    clear_line,
+    clear_lines,
     clear_screen,
     get_terminal_size,
+    move_cursor_down,
+    move_cursor_up,
     reset_terminal,
     restore_terminal,
     set_terminal_title,
@@ -114,7 +118,11 @@ __all__ = [
     "rule",
     # Terminal
     "TerminalManager",
+    "clear_line",
+    "clear_lines",
     "clear_screen",
+    "move_cursor_up",
+    "move_cursor_down",
     "restore_terminal",
     "reset_terminal",
     "get_terminal_size",
