@@ -163,12 +163,18 @@ class Output:
             elif self._theme.name == "terminal":
                 # Terminal theme: simplified output but with basic formatting
                 if isinstance(message, str):
-                    # Keep basic markup but remove complex formatting
-                    self._console.print(message, **kwargs)
+                    # Escape markup characters to prevent Rich parsing errors with ANSI codes
+                    escaped_message = escape(message)
+                    self._console.print(escaped_message, **kwargs)
                 else:
                     self._console.print(message, **kwargs)
             else:
-                self._console.print(message, **kwargs)
+                # Escape strings to prevent Rich markup parsing errors
+                if isinstance(message, str):
+                    escaped_message = escape(message)
+                    self._console.print(escaped_message, **kwargs)
+                else:
+                    self._console.print(message, **kwargs)
 
     def debug(self, message: str, **kwargs):
         """Print a debug message (only in verbose mode)."""
