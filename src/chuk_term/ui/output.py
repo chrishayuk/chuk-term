@@ -15,6 +15,7 @@ from typing import Any
 
 from rich.console import Console
 from rich.markdown import Markdown
+from rich.markup import escape
 from rich.panel import Panel
 from rich.progress import Progress, SpinnerColumn, TextColumn
 from rich.table import Table
@@ -228,29 +229,35 @@ class Output:
 
     def error(self, message: str, **kwargs):
         """Print an error message."""
+        # Escape any markup characters in the message to prevent Rich markup parsing errors
+        escaped_message = escape(str(message))
+
         if self._theme.name == "minimal":
-            builtins.print(f"ERROR: {message}", file=sys.stderr)
+            builtins.print(f"ERROR: {escaped_message}", file=sys.stderr)
         elif self._theme.name == "terminal":
             # Terminal: no icons but keep color
-            self._err_console.print(f"[red]ERROR:[/] {message}", **kwargs)
+            self._err_console.print(f"[red]ERROR:[/] {escaped_message}", **kwargs)
         else:
             style = self._theme.style("error")
             icon = self._theme.icons.error if self._theme.should_show_icons() else ""
             prefix = f"{icon} " if icon else ""
-            self._err_console.print(f"[{style}]{prefix}{message}[/]", **kwargs)
+            self._err_console.print(f"[{style}]{prefix}{escaped_message}[/]", **kwargs)
 
     def fatal(self, message: str, **kwargs):
         """Print a fatal error message."""
+        # Escape any markup characters in the message to prevent Rich markup parsing errors
+        escaped_message = escape(str(message))
+
         if self._theme.name == "minimal":
-            builtins.print(f"FATAL: {message}", file=sys.stderr)
+            builtins.print(f"FATAL: {escaped_message}", file=sys.stderr)
         elif self._theme.name == "terminal":
             # Terminal: no icons but keep color
-            self._err_console.print(f"[bold red]FATAL:[/] {message}", **kwargs)
+            self._err_console.print(f"[bold red]FATAL:[/] {escaped_message}", **kwargs)
         else:
             style = self._theme.style("error", "emphasis")
             icon = self._theme.icons.error if self._theme.should_show_icons() else ""
             prefix = f"{icon} FATAL: " if icon else "FATAL: "
-            self._err_console.print(f"[{style}]{prefix}{message}[/]", **kwargs)
+            self._err_console.print(f"[{style}]{prefix}{escaped_message}[/]", **kwargs)
 
     # ─────────────────────────── Formatted Output ───────────────────────
 
