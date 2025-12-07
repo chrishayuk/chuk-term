@@ -173,59 +173,72 @@ class Output:
     def debug(self, message: str, **kwargs):
         """Print a debug message (only in verbose mode)."""
         if self._verbose:
+            # Escape any markup characters in the message to prevent Rich markup parsing errors
+            escaped_message = escape(str(message))
+
             if self._theme.name == "minimal":
-                self._plain_print(f"DEBUG: {message}")
+                self._plain_print(f"DEBUG: {escaped_message}")
             elif self._theme.name == "terminal":
                 # Terminal: no icons but keep color
-                self._console.print(f"[dim]DEBUG: {message}[/]", **kwargs)
+                self._console.print(f"[dim]DEBUG: {escaped_message}[/]", **kwargs)
             else:
                 style = self._theme.style("debug")
                 icon = self._theme.icons.debug if self._theme.should_show_icons() else ""
                 prefix = f"{icon} " if icon else ""
-                self._console.print(f"[{style}]{prefix}{message}[/]", **kwargs)
+                self._console.print(f"[{style}]{prefix}{escaped_message}[/]", **kwargs)
 
     def info(self, message: str, **kwargs):
         """Print an info message."""
         if not self._quiet:
+            # Escape any markup characters in the message to prevent Rich markup parsing errors
+            escaped_message = escape(str(message))
+
             if self._theme.name == "minimal":
-                self._plain_print(f"INFO: {message}")
+                self._plain_print(f"INFO: {escaped_message}")
             elif self._theme.name == "terminal":
                 # Terminal: no icons but keep color
-                self._console.print(f"[blue]INFO:[/] {message}", **kwargs)
+                self._console.print(f"[blue]INFO:[/] {escaped_message}", **kwargs)
             else:
                 style = self._theme.style("info")
                 icon = self._theme.icons.info if self._theme.should_show_icons() else ""
                 prefix = f"{icon} " if icon else ""
-                self._console.print(f"[{style}]{prefix}{message}[/]", **kwargs)
+                self._console.print(f"[{style}]{prefix}{escaped_message}[/]", **kwargs)
 
     def success(self, message: str, **kwargs):
         """Print a success message."""
+        # Clean up the message - remove any leading checkmarks if in the message itself
+        if message.startswith("✓ "):
+            message = message[2:]
+
+        # Escape any markup characters in the message to prevent Rich markup parsing errors
+        escaped_message = escape(str(message))
+
         if self._theme.name == "minimal":
-            self._plain_print(f"OK: {message}")
+            self._plain_print(f"OK: {escaped_message}")
         elif self._theme.name == "terminal":
             # Terminal: no icons but keep color
-            self._console.print(f"[green]OK:[/] {message}", **kwargs)
+            self._console.print(f"[green]OK:[/] {escaped_message}", **kwargs)
         else:
             style = self._theme.style("success")
             icon = self._theme.icons.success if self._theme.should_show_icons() else ""
             prefix = f"{icon} " if icon else ""
-            # Clean up the message - remove any leading checkmarks if in the message itself
-            if message.startswith("✓ "):
-                message = message[2:]
-            self._console.print(f"[{style}]{prefix}{message}[/]", **kwargs)
+            self._console.print(f"[{style}]{prefix}{escaped_message}[/]", **kwargs)
 
     def warning(self, message: str, **kwargs):
         """Print a warning message."""
+        # Escape any markup characters in the message to prevent Rich markup parsing errors
+        escaped_message = escape(str(message))
+
         if self._theme.name == "minimal":
-            self._plain_print(f"WARN: {message}")
+            self._plain_print(f"WARN: {escaped_message}")
         elif self._theme.name == "terminal":
             # Terminal: no icons but keep color
-            self._console.print(f"[yellow]WARN:[/] {message}", **kwargs)
+            self._console.print(f"[yellow]WARN:[/] {escaped_message}", **kwargs)
         else:
             style = self._theme.style("warning")
             icon = self._theme.icons.warning if self._theme.should_show_icons() else ""
             prefix = f"{icon} " if icon else ""
-            self._console.print(f"[{style}]{prefix}{message}[/]", **kwargs)
+            self._console.print(f"[{style}]{prefix}{escaped_message}[/]", **kwargs)
 
     def error(self, message: str, **kwargs):
         """Print an error message."""
