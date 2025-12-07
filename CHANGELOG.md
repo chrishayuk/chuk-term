@@ -1,6 +1,6 @@
 # Changelog
 
-## [0.1.7] - 2025-12-07
+## [0.1.8] - 2025-12-07
 
 ### Added
 - **`clear_lines(count)`** function for multi-line clearing
@@ -9,6 +9,12 @@
   - Properly handles line counting and cursor positioning
   - Essential for live-updating multi-line displays
 
+- **ANSI Escape Code Support** in `Output.print()`
+  - Automatically detects ANSI escape sequences (`\033[...`)
+  - Writes them directly to stdout without escaping
+  - Preserves terminal control codes for cursor movement, clearing, etc.
+  - Critical for live-updating displays with multi-line content
+
 ### API
 New functions in `chuk_term.ui.terminal`:
 - `clear_lines(count: int)` - Clear multiple lines and return to first line
@@ -16,8 +22,11 @@ New functions in `chuk_term.ui.terminal`:
 - Exposed `move_cursor_up(lines)` and `move_cursor_down(lines)` in public API
 
 ### Tests
+- Added 9 comprehensive tests for ANSI escape code handling
+  - Tests preservation of escape codes, clearing, cursor movement
+  - Tests mixed ANSI and text content, flushing, custom end parameters
 - Added 5 comprehensive tests for `clear_lines()` function
-- Tests cover single line, multiple lines, zero, negative, and Windows platform
+  - Tests cover single line, multiple lines, zero, negative, and Windows platform
 
 ### Use Case
 Enables clean implementation of multi-line live status displays:

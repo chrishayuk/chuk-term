@@ -13,15 +13,12 @@ from chuk_term.ui.terminal import (
     TerminalManager,
     alternate_screen,
     bell,
-    clear_line,
     clear_lines,
     clear_screen,
     get_terminal_info,
     get_terminal_size,
     hide_cursor,
     hyperlink,
-    move_cursor_down,
-    move_cursor_up,
     reset_terminal,
     restore_terminal,
     set_terminal_title,
@@ -976,6 +973,50 @@ class TestClearLines:
 
         # Should not write anything on Windows
         mock_stdout.write.assert_not_called()
+
+
+class TestTerminalCursorFunctions:
+    """Test cursor management wrapper functions."""
+
+    def test_save_cursor_position(self):
+        """Test save_cursor_position function."""
+        from chuk_term.ui.terminal import save_cursor_position
+
+        with patch.object(TerminalManager, "save_cursor_position") as mock_save:
+            save_cursor_position()
+            mock_save.assert_called_once()
+
+    def test_restore_cursor_position(self):
+        """Test restore_cursor_position function."""
+        from chuk_term.ui.terminal import restore_cursor_position
+
+        with patch.object(TerminalManager, "restore_cursor_position") as mock_restore:
+            restore_cursor_position()
+            mock_restore.assert_called_once()
+
+    def test_move_cursor_up(self):
+        """Test move_cursor_up function."""
+        from chuk_term.ui.terminal import move_cursor_up
+
+        with patch.object(TerminalManager, "move_cursor_up") as mock_up:
+            move_cursor_up(5)
+            mock_up.assert_called_once_with(5)
+
+    def test_move_cursor_down(self):
+        """Test move_cursor_down function."""
+        from chuk_term.ui.terminal import move_cursor_down
+
+        with patch.object(TerminalManager, "move_cursor_down") as mock_down:
+            move_cursor_down(3)
+            mock_down.assert_called_once_with(3)
+
+    def test_clear_line(self):
+        """Test clear_line function."""
+        from chuk_term.ui.terminal import clear_line
+
+        with patch.object(TerminalManager, "clear_line") as mock_clear:
+            clear_line()
+            mock_clear.assert_called_once()
 
 
 @pytest.fixture(autouse=True)

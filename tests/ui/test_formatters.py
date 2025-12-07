@@ -343,3 +343,252 @@ class TestFormatDiff:
 
         # Rich theme returns Syntax object
         assert hasattr(result, "lexer")
+
+
+class TestAdditionalCoverage:
+    """Additional tests for complete coverage."""
+
+    def test_format_tool_call_json_error_minimal(self, minimal_theme):
+        """Test tool call with non-serializable arguments in minimal theme."""
+        # Mock json.dumps to raise an exception
+        from unittest.mock import patch
+
+        with patch("chuk_term.ui.formatters.json.dumps", side_effect=Exception("Mock error")):
+            result = format_tool_call("test_tool", {"arg": "value"})
+            assert isinstance(result, str)
+            assert "Tool: test_tool" in result
+
+    def test_format_tool_call_json_error_rich(self, default_theme):
+        """Test tool call with non-serializable arguments in rich theme."""
+        # Mock json.dumps to raise an exception
+        from unittest.mock import patch
+
+        with patch("chuk_term.ui.formatters.json.dumps", side_effect=Exception("Mock error")):
+            result = format_tool_call("test_tool", {"arg": "value"})
+            assert result is not None
+
+    def test_format_tool_call_with_description_rich(self, default_theme):
+        """Test tool call with description in rich theme."""
+        result = format_tool_call(
+            "test_tool", {"arg": "value"}, include_description=True, description="This is a test tool"
+        )
+        assert hasattr(result, "markup")  # Markdown object
+
+    def test_format_tool_call_no_args_rich(self, default_theme):
+        """Test tool call with no arguments in rich theme."""
+        result = format_tool_call("test_tool", {})
+        assert hasattr(result, "markup")  # Markdown object
+
+    def test_format_tool_result_non_dict_minimal(self, minimal_theme):
+        """Test tool result with non-dict/list result in minimal theme."""
+        result = format_tool_result("Simple string result", success=True)
+        assert "Success" in result
+        assert "Simple string result" in result
+
+    def test_format_tool_result_json_error_minimal(self, minimal_theme):
+        """Test tool result with non-serializable dict in minimal theme."""
+
+        class NonSerializable:
+            pass
+
+        # dict with non-serializable value should fallback to str()
+        result = format_tool_result({"obj": NonSerializable()}, success=True)
+        assert isinstance(result, str)
+
+    def test_format_tool_result_json_error_rich(self, default_theme):
+        """Test tool result with non-serializable dict in rich theme."""
+
+        class NonSerializable:
+            pass
+
+        # dict with non-serializable value should fallback to str()
+        result = format_tool_result({"obj": NonSerializable()}, success=True)
+        assert result is not None
+
+    def test_format_tool_result_non_dict_rich(self, default_theme):
+        """Test tool result with non-dict result in rich theme."""
+        result = format_tool_result("Plain text result", success=False)
+        assert result is not None
+
+    def test_format_error_rich_full(self, default_theme):
+        """Test error formatting in rich theme with all features."""
+        try:
+            raise ValueError("Test error in rich mode")
+        except Exception as e:
+            result = format_error(
+                e,
+                include_traceback=True,
+                context="Testing rich theme error formatting",
+                suggestions=["Try this", "Or try that"],
+            )
+            assert result is not None
+
+    def test_format_error_rich_basic(self, default_theme):
+        """Test basic error formatting in rich theme."""
+        error = RuntimeError("Simple error")
+        result = format_error(error)
+        assert result is not None
+
+    def test_format_json_error_handling(self, minimal_theme):
+        """Test JSON formatting with truly non-serializable data."""
+
+        class BadObject:
+            def __repr__(self):
+                raise Exception("Cannot represent")
+
+            def __str__(self):
+                raise Exception("Cannot stringify")
+
+        # This should trigger the exception handler
+        result = format_json(BadObject())
+        assert "Error formatting JSON" in result
+
+    def test_format_json_error_handling_rich(self, default_theme):
+        """Test JSON formatting error in rich theme."""
+
+        class BadObject:
+            def __repr__(self):
+                raise Exception("Cannot represent")
+
+            def __str__(self):
+                raise Exception("Cannot stringify")
+
+        result = format_json(BadObject())
+        assert result is not None
+
+    def test_format_json_no_highlight_with_title(self, default_theme):
+        """Test JSON without syntax highlighting but with title in rich theme."""
+        data = {"test": "value"}
+        result = format_json(data, syntax_highlight=False, title="Test Data")
+        assert hasattr(result, "markup")  # Markdown object
+
+    def test_format_json_no_highlight_no_title(self, default_theme):
+        """Test JSON without syntax highlighting or title in rich theme."""
+        data = {"simple": "data"}
+        result = format_json(data, syntax_highlight=False)
+        assert hasattr(result, "markup")  # Markdown object
+
+    def test_format_table_empty_rich(self, default_theme):
+        """Test empty table in rich theme."""
+        from rich.table import Table
+
+        result = format_table([])
+        assert isinstance(result, Table)
+
+    def test_format_table_empty_with_title_rich(self, default_theme):
+        """Test empty table with title in rich theme."""
+        from rich.table import Table
+
+        result = format_table([], title="Empty Table")
+        assert isinstance(result, Table)
+
+    def test_format_table_rich_with_max_rows(self, default_theme):
+        """Test table with max_rows in rich theme."""
+        from rich.table import Table
+
+        data = [{"id": i, "name": f"Item {i}"} for i in range(10)]
+        result = format_table(data, max_rows=5)
+        assert isinstance(result, Table)
+
+    def test_format_table_rich_with_title(self, default_theme):
+        """Test table with title in rich theme."""
+        from rich.table import Table
+
+        data = [{"col1": "val1", "col2": "val2"}]
+        result = format_table(data, title="Test Table")
+        assert isinstance(result, Table)
+
+    def test_format_table_terminal_with_unicode(self):
+        """Test table in terminal theme with unicode symbols."""
+        set_theme("minimal")
+        data = [{"status": "✓", "result": "✗", "marker": "●"}]
+        result = format_table(data)
+        assert "OK" in result or "X" in result or "*" in result
+
+    def test_format_tree_rich(self, default_theme):
+        """Test tree formatting in rich theme."""
+        from rich.tree import Tree
+
+        data = {"root": {"child": "value"}}
+        result = format_tree(data)
+        assert isinstance(result, Tree)
+
+    def test_format_tree_rich_with_lists(self, default_theme):
+        """Test tree with lists in rich theme."""
+        from rich.tree import Tree
+
+        data = {"items": ["a", "b"], "nested": {"more": ["x", "y"]}}
+        result = format_tree(data)
+        assert isinstance(result, Tree)
+
+    def test_format_tree_rich_max_depth(self, default_theme):
+        """Test tree with max depth in rich theme."""
+        from rich.tree import Tree
+
+        data = {"level1": {"level2": {"level3": "deep"}}}
+        result = format_tree(data, max_depth=2)
+        assert isinstance(result, Tree)
+
+    def test_format_tree_rich_with_title(self, default_theme):
+        """Test tree with title in rich theme."""
+        from rich.tree import Tree
+
+        data = {"node": "value"}
+        result = format_tree(data, title="Custom Title")
+        assert isinstance(result, Tree)
+
+    def test_format_tree_rich_nested_dicts(self, default_theme):
+        """Test tree with deeply nested dicts in rich theme."""
+        from rich.tree import Tree
+
+        data = {"a": {"b": {"c": {"d": "value"}}}}
+        result = format_tree(data)
+        assert isinstance(result, Tree)
+
+    def test_format_tree_rich_mixed_types(self, default_theme):
+        """Test tree with mixed types in rich theme."""
+        from rich.tree import Tree
+
+        data = {"string": "value", "number": 42, "nested": {"list": [1, 2, 3]}}
+        result = format_tree(data)
+        assert isinstance(result, Tree)
+
+    def test_format_tree_terminal_theme(self):
+        """Test tree formatting in terminal theme."""
+        set_theme("terminal")
+        data = {"root": {"child": "value"}}
+        result = format_tree(data)
+        assert isinstance(result, str)
+        assert "root" in result
+
+    def test_format_tree_rich_with_scalar_values(self, default_theme):
+        """Test tree with scalar values in rich theme."""
+        from rich.tree import Tree
+
+        data = {"key1": "string", "key2": 123, "key3": True}
+        result = format_tree(data)
+        assert isinstance(result, Tree)
+
+    def test_format_tree_rich_list_with_scalars(self, default_theme):
+        """Test tree with list of scalar values in rich theme."""
+        from rich.tree import Tree
+
+        data = ["item1", "item2", "item3"]
+        result = format_tree(data)
+        assert isinstance(result, Tree)
+
+    def test_format_tree_minimal_with_scalar(self):
+        """Test tree with scalar value in minimal theme."""
+        set_theme("minimal")
+        data = "just a string"
+        result = format_tree(data)
+        assert isinstance(result, str)
+
+    def test_format_tree_minimal_list_with_nested(self):
+        """Test tree with nested list in minimal theme."""
+        set_theme("minimal")
+        data = [{"nested": "dict"}, ["nested", "list"]]
+        result = format_tree(data)
+        assert isinstance(result, str)
+        assert "[0]" in result
+        assert "[1]" in result

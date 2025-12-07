@@ -133,7 +133,17 @@ class Output:
             **kwargs: Additional arguments for rich.console.print
         """
         if not self._quiet or kwargs.get("force", False):
-            if self._theme.name == "minimal":
+            # Check if message contains ANSI escape codes
+            # IMPORTANT: Must check BEFORE theme handling to prevent escaping
+            is_ansi = isinstance(message, str) and "\033[" in message
+
+            if is_ansi:
+                # For messages with ANSI codes, write directly to stdout
+                # to preserve the escape sequences
+                end = kwargs.get("end", "\n")
+                sys.stdout.write(str(message) + end)
+                sys.stdout.flush()
+            elif self._theme.name == "minimal":
                 # For minimal theme, strip all markup and print plain text
                 if isinstance(message, str):
                     message = self._strip_markup(message)
@@ -163,7 +173,8 @@ class Output:
             elif self._theme.name == "terminal":
                 # Terminal theme: simplified output but with basic formatting
                 if isinstance(message, str):
-                    # Escape markup characters to prevent Rich parsing errors with ANSI codes
+                    # Escape markup characters to prevent Rich parsing errors
+                    # Note: ANSI codes are handled above
                     escaped_message = escape(message)
                     self._console.print(escaped_message, **kwargs)
                 else:
