@@ -145,7 +145,9 @@ class Output:
         if not self._quiet or kwargs.get("force", False):
             # Check if message contains ANSI escape codes
             # IMPORTANT: Must check BEFORE theme handling to prevent escaping
-            is_ansi = isinstance(message, str) and "\033[" in message
+            # Note: \033 is octal for ESC (0x1B = chr(27)), check for actual escape character
+            ESC = chr(27)  # ASCII escape character
+            is_ansi = isinstance(message, str) and (f"{ESC}[" in message)
 
             if is_ansi:
                 # For messages with ANSI codes, write directly to stdout
@@ -906,14 +908,21 @@ class Output:
 
         This method combines carriage return + clear line + message into a single
         ANSI-escaped string, which will be detected and written directly to stdout
-        without Rich escaping.
+        without Rich escaping. Useful for status lines that update in place.
 
         Args:
             message: Status message to display
             **kwargs: Additional arguments (end, etc.)
+
+        Example:
+            for i in range(10):
+                output.print_status_line(f"Processing {i}/10...", end="")
+                time.sleep(0.1)
+            print()  # Move to next line when done
         """
         # Combine CR + clear line + message into single ANSI string
-        # The \033[ prefix will trigger ANSI detection in print()
+        # \033 (octal) = \x1b (hex) = chr(27) = ESC character
+        # The ESC[ sequence triggers ANSI detection in print() method
         ansi_message = f"\r\033[K{message}"
         self.print(ansi_message, **kwargs)
 
