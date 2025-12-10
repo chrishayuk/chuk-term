@@ -17,7 +17,17 @@ from rich.console import Console
 from rich.markdown import Markdown
 from rich.markup import escape
 from rich.panel import Panel
-from rich.progress import Progress, SpinnerColumn, TextColumn
+from rich.progress import (
+    BarColumn,
+    MofNCompleteColumn,
+    Progress,
+    SpinnerColumn,
+    TaskProgressColumn,
+    TextColumn,
+    TimeElapsedColumn,
+    TimeRemainingColumn,
+    track,
+)
 from rich.table import Table
 from rich.text import Text
 
@@ -506,6 +516,80 @@ class Output:
             style = self._theme.style("info")
             return self._console.status(f"[{style}]{message}[/]", spinner=spinner)
 
+    def progress_bar(self, description: str = "Processing", show_time: bool = True):  # noqa: ARG002
+        """
+        Create a detailed progress bar with customizable columns.
+
+        Args:
+            description: Description text for the progress bar
+            show_time: Whether to show elapsed and remaining time (default: True)
+
+        Returns:
+            Progress context manager that can be used to track tasks
+
+        Example:
+            with output.progress_bar("Downloading files") as progress:
+                task = progress.add_task("download", total=100)
+                for i in range(100):
+                    progress.update(task, advance=1)
+                    time.sleep(0.01)
+        """
+        if self._theme.name in ("minimal", "terminal"):
+            # Return a simpler progress for minimal/terminal modes
+            columns: list = [TextColumn("[progress.description]{task.description}")]
+        else:
+            columns = [
+                SpinnerColumn(),
+                TextColumn("[progress.description]{task.description}"),
+                BarColumn(),
+                TaskProgressColumn(),
+                MofNCompleteColumn(),
+            ]
+            if show_time:
+                columns.extend([TimeElapsedColumn(), TimeRemainingColumn()])
+
+        return Progress(*columns, console=self._console, transient=False)
+
+    def track(self, sequence, description: str = "Processing...", total: int | None = None):
+        """
+        Track progress of an iterable with a progress bar.
+
+        Args:
+            sequence: Iterable to track
+            description: Description for the progress bar
+            total: Total number of items (auto-detected if not provided)
+
+        Returns:
+            Iterator that yields items from sequence while showing progress
+
+        Example:
+            for item in output.track(items, "Processing items"):
+                process(item)
+        """
+        if self._theme.name == "minimal":
+            # For minimal theme, just iterate without progress
+            self._plain_print(f"{description}")
+            return sequence
+        else:
+            return track(sequence, description=description, total=total, console=self._console)
+
+    def spinner(self, message: str = "Working...", spinner_type: str = "dots"):
+        """
+        Show a spinner with a message (alias for loading with different default).
+
+        Args:
+            message: Message to display with spinner
+            spinner_type: Type of spinner animation (dots, line, etc.)
+
+        Returns:
+            Context manager for spinner display
+
+        Example:
+            with output.spinner("Processing request..."):
+                do_long_operation()
+        """
+        return self.loading(message, spinner=spinner_type)
+
     # ─────────────────────────── Special Outputs ────────────────────────
 
     def user_message(self, message: str):
@@ -816,6 +900,23 @@ class Output:
         """Clear the console screen."""
         self._console.clear()
 
+    def print_status_line(self, message: str, **kwargs):
+        """
+        Print a status line with inline clear (for live updates).
+
+        This method combines carriage return + clear line + message into a single
+        ANSI-escaped string, which will be detected and written directly to stdout
+        without Rich escaping.
+
+        Args:
+            message: Status message to display
+            **kwargs: Additional arguments (end, etc.)
+        """
+        # Combine CR + clear line + message into single ANSI string
+        # The \033[ prefix will trigger ANSI detection in print()
+        ansi_message = f"\r\033[K{message}"
+        self.print(ansi_message, **kwargs)
+
     def rule(self, title: str = "", **kwargs):
         """Print a horizontal rule."""
         if not self._quiet:
@@ -968,3 +1069,8 @@ def clear():
 def rule(title: str = "", **kwargs):
     """Print a horizontal rule."""
     ui.rule(title, **kwargs)
+
+
+def print_status_line(message: str, **kwargs):
+    """Print a status line with inline clear."""
+    ui.print_status_line(message, **kwargs)

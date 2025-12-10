@@ -54,3 +54,39 @@ def test_test_command(cli_runner):
     result = cli_runner.invoke(cli, ["test"])
     assert result.exit_code == 0
     assert "Running terminal tests" in result.output
+
+
+def test_themes_command(cli_runner):
+    """Test themes command."""
+    result = cli_runner.invoke(cli, ["themes"])
+    assert result.exit_code == 0
+    assert "Theme Gallery" in result.output
+    assert "Current theme" in result.output
+
+
+def test_themes_command_side_by_side(cli_runner):
+    """Test themes command with side-by-side flag."""
+    result = cli_runner.invoke(cli, ["themes", "--side-by-side"])
+    assert result.exit_code == 0
+    assert "Theme Gallery" in result.output
+
+
+def test_examples_command_list(cli_runner):
+    """Test examples command listing."""
+    result = cli_runner.invoke(cli, ["examples"])
+    assert result.exit_code == 0
+    # Should show examples or message about examples directory
+    assert "Examples" in result.output or "not found" in result.output
+
+
+def test_examples_command_list_only(cli_runner):
+    """Test examples command with list-only flag."""
+    result = cli_runner.invoke(cli, ["examples", "--list-only"])
+    assert result.exit_code == 0
+
+
+def test_examples_command_run_nonexistent(cli_runner):
+    """Test examples command trying to run nonexistent example."""
+    result = cli_runner.invoke(cli, ["examples", "--run", "nonexistent_example"])
+    # Should either run or report not found
+    assert result.exit_code == 0  # Command itself should succeed

@@ -531,3 +531,13 @@ def format_with_theme(text: str, component: str) -> str:
         return theme.format(text, *component_map[component])
 
     return text
+
+
+def get_available_themes() -> list[str]:
+    """
+    Get list of all available theme names.
+
+    Returns:
+        List of theme names
+    """
+    return ["default", "dark", "light", "minimal", "terminal", "monokai", "dracula", "solarized"]

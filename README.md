@@ -4,8 +4,19 @@ A modern terminal library with a powerful CLI interface for building beautiful t
 
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Test Coverage](https://img.shields.io/badge/coverage-71%25-yellow.svg)](docs/testing/TEST_COVERAGE.md)
-[![Tests](https://img.shields.io/badge/tests-351%20passed-green.svg)](docs/testing/UNIT_TESTING.md)
+[![Test Coverage](https://img.shields.io/badge/coverage-89%25-brightgreen.svg)](docs/testing/TEST_COVERAGE.md)
+[![Tests](https://img.shields.io/badge/tests-519%20passed-brightgreen.svg)](docs/testing/UNIT_TESTING.md)
+
+## 🆕 What's New in v0.2
+
+- 📈 **Progress Indicators**: New `progress_bar()`, `track()`, and `spinner()` methods for better user feedback
+- 🎨 **Theme Preview CLI**: `chuk-term themes --side-by-side` to compare all 8 themes
+- 📚 **Examples Browser**: `chuk-term examples` to discover and run examples
+- 🧪 **Improved Testing**: 89% code coverage with 519 passing tests
+- 📖 **Better Documentation**: New CONTRIBUTING.md and updated guides
+- 🔧 **Quality Automation**: Pre-commit hooks with latest tools (ruff, black, mypy)
+
+See [CHANGELOG.md](CHANGELOG.md) for complete release history.
 
 ## ✨ Features
 
@@ -16,6 +27,7 @@ A modern terminal library with a powerful CLI interface for building beautiful t
 - 🔧 **Terminal Management**: Screen control, cursor management, hyperlinks, and color detection
 - 💬 **Interactive Prompts**: Text input, confirmations, number input, single/multi selection menus
 - 📊 **Data Formatting**: Tables, trees, JSON, timestamps, and structured output
+- 📈 **Progress Indicators**: Progress bars, spinners, and task tracking with `track()` and `progress_bar()`
 - 🌊 **Streaming Support**: Live-updating messages for real-time content streaming (LLM-style)
 - 🤖 **AI-Friendly**: Designed for AI agents with comprehensive docs and consistent APIs
 - 🔄 **Environment Adaptation**: Automatically adapts to TTY, CI, and NO_COLOR environments
@@ -46,7 +58,7 @@ pip install chuk-term[dev]
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/chuk-term.git
+git clone https://github.com/chrishayuk/chuk-term.git
 cd chuk-term
 
 # Install with uv (recommended)
@@ -152,11 +164,34 @@ for word in "Hello from ChukTerm streaming!".split():
 assistant.finalize()
 ```
 
+### Progress Indicators (New!)
+
+```python
+from chuk_term.ui import output
+import time
+
+# Progress bar with detailed tracking
+with output.progress_bar("Processing files", show_time=True) as progress:
+    task = progress.add_task("download", total=100)
+    for i in range(100):
+        progress.update(task, advance=1)
+        time.sleep(0.01)
+
+# Simple iteration tracking
+items = ['file1.txt', 'file2.txt', 'file3.txt']
+for item in output.track(items, "Processing files"):
+    process(item)  # Your processing logic
+
+# Spinner for indeterminate tasks
+with output.spinner("Loading data..."):
+    load_data()  # Long-running operation
+```
+
 ### Theme Support
 
 ```python
 from chuk_term.ui import output
-from chuk_term.ui.theme import set_theme, get_theme
+from chuk_term.ui.theme import set_theme, get_theme, get_available_themes
 
 # Set a theme
 set_theme("monokai")  # or dracula, solarized, minimal, terminal
@@ -164,11 +199,15 @@ set_theme("monokai")  # or dracula, solarized, minimal, terminal
 # Get current theme
 current = get_theme()
 output.info(f"Using theme: {current.name}")
+
+# List all available themes
+themes = get_available_themes()
+output.info(f"Available themes: {', '.join(themes)}")
 ```
 
 ## 🖥️ CLI Usage
 
-ChukTerm includes a CLI for testing and demonstrating features:
+ChukTerm includes a powerful CLI for exploring and testing features:
 
 ```bash
 # Show library information
@@ -177,6 +216,15 @@ chuk-term info --verbose
 
 # Run interactive demo
 chuk-term demo
+
+# Preview all themes (New!)
+chuk-term themes                    # Detailed preview of each theme
+chuk-term themes --side-by-side     # Compact side-by-side comparison
+
+# Explore examples (New!)
+chuk-term examples                  # List all available examples with descriptions
+chuk-term examples --list-only      # Quick list of example names
+chuk-term examples --run demo       # Run a specific example
 
 # Run a command with theming
 chuk-term run "ls -la"
@@ -191,14 +239,18 @@ chuk-term test --theme monokai
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/chuk-term.git
+git clone https://github.com/chrishayuk/chuk-term.git
 cd chuk-term
 
 # Install with dev dependencies using uv
 uv sync --dev
 
-# Install pre-commit hooks
-pre-commit install
+# Install pre-commit hooks (automatic code quality checks)
+uv run pre-commit install
+
+# Verify installation
+chuk-term --version
+uv run pytest  # Run tests
 ```
 
 ### Running Tests
@@ -326,16 +378,20 @@ chuk-term/
 │       ├── code.py        # Code display
 │       ├── banners.py     # Banner displays
 │       └── streaming.py   # Streaming message support
-├── tests/                 # Test suite (351 tests)
+├── tests/                 # Test suite (519 tests, 89% coverage)
 ├── examples/              # Example scripts
 │   ├── ui_demo.py
 │   ├── ui_streaming_*.py # Streaming demonstrations
 │   └── ...
 ├── docs/                  # Documentation
-│   └── ui/
-│       └── GETTING_STARTED.md  # Quick start guide
-├── llms.txt              # LLM-optimized docs
-├── CLAUDE.md             # Project context
+│   ├── ui/                # UI documentation
+│   │   └── GETTING_STARTED.md  # Quick start guide
+│   └── testing/           # Testing documentation
+│       ├── UNIT_TESTING.md
+│       └── TEST_COVERAGE.md
+├── llms.txt              # LLM-optimized docs (llmstxt.org)
+├── CLAUDE.md             # Project context for AI agents
+├── CONTRIBUTING.md       # Contribution guidelines
 └── pyproject.toml        # Package configuration
 ```
 
@@ -365,6 +421,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 📮 Support
 
-- 📫 Report issues at [GitHub Issues](https://github.com/yourusername/chuk-term/issues)
-- 💬 Discuss at [GitHub Discussions](https://github.com/yourusername/chuk-term/discussions)
-- 📖 Read docs at [GitHub Wiki](https://github.com/yourusername/chuk-term/wiki)
+- 📫 Report issues at [GitHub Issues](https://github.com/chrishayuk/chuk-term/issues)
+- 💬 Discuss at [GitHub Discussions](https://github.com/chrishayuk/chuk-term/discussions)
+- 📖 Read docs at [GitHub Wiki](https://github.com/chrishayuk/chuk-term/wiki)

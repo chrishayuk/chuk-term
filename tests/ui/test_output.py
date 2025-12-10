@@ -356,6 +356,64 @@ class TestProgressAndLoading:
         captured = capsys.readouterr()
         assert "Processing..." in captured.out
 
+    def test_progress_bar(self, output):
+        """Test progress_bar context manager."""
+        with output.progress_bar("Processing files") as progress:
+            assert progress is not None
+            # Test adding a task
+            task = progress.add_task("test", total=10)
+            progress.update(task, advance=5)
+
+    def test_progress_bar_without_time(self, output):
+        """Test progress_bar without time columns."""
+        with output.progress_bar("Processing", show_time=False) as progress:
+            assert progress is not None
+
+    def test_progress_bar_minimal_theme(self, output, capsys):
+        """Test progress_bar in minimal theme."""
+        minimal_theme = Theme("minimal")
+        output.set_theme(minimal_theme)
+
+        with output.progress_bar("Processing") as progress:
+            assert progress is not None
+
+    def test_track(self, output):
+        """Test track method for iterating with progress."""
+        items = [1, 2, 3, 4, 5]
+        result = []
+        for item in output.track(items, "Processing items"):
+            result.append(item)
+        assert result == items
+
+    def test_track_with_total(self, output):
+        """Test track method with explicit total."""
+        items = range(10)
+        count = 0
+        for _ in output.track(items, "Processing", total=10):
+            count += 1
+        assert count == 10
+
+    def test_track_minimal_theme(self, output, capsys):
+        """Test track in minimal theme."""
+        minimal_theme = Theme("minimal")
+        output.set_theme(minimal_theme)
+
+        items = [1, 2, 3]
+        result = list(output.track(items, "Processing"))
+        assert result == items
+        captured = capsys.readouterr()
+        assert "Processing" in captured.out
+
+    def test_spinner(self, output):
+        """Test spinner context manager."""
+        with output.spinner("Working...") as spinner:
+            assert spinner is not None
+
+    def test_spinner_custom_type(self, output):
+        """Test spinner with custom spinner type."""
+        with output.spinner("Loading...", spinner_type="line") as spinner:
+            assert spinner is not None
+
 
 class TestUtilityMethods:
     """Test utility methods."""

@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "chuk-term"
-version = "0.1.8"
+version = "0.2"
 description = "A terminal library with CLI interface"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -45,9 +45,10 @@ dev = [
 chuk-term = "chuk_term.cli:main"
 
 [project.urls]
-Homepage = "https://github.com/yourusername/chuk-term"
-Repository = "https://github.com/yourusername/chuk-term"
-Issues = "https://github.com/yourusername/chuk-term/issues"
+Homepage = "https://github.com/chrishayuk/chuk-term"
+Repository = "https://github.com/chrishayuk/chuk-term"
+Issues = "https://github.com/chrishayuk/chuk-term/issues"
+Documentation = "https://github.com/chrishayuk/chuk-term/tree/main/docs"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/chuk_term"]

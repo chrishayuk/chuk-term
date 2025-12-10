@@ -57,3 +57,8 @@ jobs:
         flags: unittests
         name: codecov-umbrella
         fail_ci_if_error: false
+
+    - name: Test CLI
+      run: |
+        uv run chuk-term --version
+        uv run chuk-term info

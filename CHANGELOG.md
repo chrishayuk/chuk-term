@@ -1,5 +1,35 @@
 # Changelog
 
+All notable changes to ChukTerm will be documented in this file.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [Unreleased]
+
+### Changed
+- Updated pre-commit hooks to latest versions (ruff v0.12.10, black v25.1.0, mypy v1.17.1)
+- Fixed package metadata URLs to use correct GitHub repository (chrishayuk/chuk-term)
+- Updated Python version compatibility to 3.10+ across all configurations
+
+### Added
+- Documentation link in package metadata
+- CONTRIBUTING.md with comprehensive contributor guidelines
+- Enhanced progress bar features:
+  - `progress_bar()` - Detailed progress bar with customizable columns
+  - `track()` - Simple iterator tracking with progress display
+  - `spinner()` - Spinner alias for better API consistency
+- Additional Rich progress imports for better progress visualization
+- New CLI commands:
+  - `chuk-term themes` - Preview all themes with detailed or side-by-side view
+  - `chuk-term examples` - List and run available examples
+  - `get_available_themes()` function in theme.py
+- Test coverage improvements:
+  - Added 13 new tests for CLI commands (themes, examples)
+  - Added 10 new tests for progress features (progress_bar, track, spinner)
+  - Total test count: 519 (was 506)
+  - Overall coverage: 89% (was 86%)
+
 ## [0.1.8] - 2025-12-07
 
 ### Added

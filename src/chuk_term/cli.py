@@ -1,6 +1,7 @@
 """CLI interface for ChukTerm."""
 
 import sys
+from pathlib import Path
 
 import click
 
@@ -14,7 +15,8 @@ from chuk_term.ui import (
     output,
     select_from_list,
 )
-from chuk_term.ui.theme import set_theme
+from chuk_term.ui.formatters import format_table
+from chuk_term.ui.theme import get_available_themes, get_theme, set_theme
 
 
 @click.group()
@@ -101,6 +103,130 @@ def test(theme: str | None) -> None:
 
     output.status("Running terminal tests...")
     output.print("Test functionality will be implemented here")
+
+
+@cli.command()
+@click.option("--side-by-side", "-s", is_flag=True, help="Show themes side by side")
+def themes(side_by_side: bool) -> None:
+    """Preview all available themes."""
+    available_themes = get_available_themes()
+    current_theme = get_theme().name
+
+    output.rule("ChukTerm Theme Gallery")
+    output.info(f"Current theme: {current_theme}\n")
+
+    if side_by_side:
+        # Show a compact preview of all themes
+        from rich.columns import Columns
+        from rich.panel import Panel
+
+        panels = []
+        for theme_name in available_themes:
+            set_theme(theme_name)
+            content = f"[{get_theme().style('info')}]Info[/]\n"
+            content += f"[{get_theme().style('success')}]Success[/]\n"
+            content += f"[{get_theme().style('warning')}]Warning[/]\n"
+            content += f"[{get_theme().style('error')}]Error[/]"
+            panels.append(Panel(content, title=theme_name, border_style=get_theme().style("info")))
+
+        output._console.print(Columns(panels, equal=True, expand=True))
+        # Restore original theme
+        set_theme(current_theme)
+    else:
+        # Show detailed preview of each theme
+        for theme_name in available_themes:
+            set_theme(theme_name)
+            output.rule(f"Theme: {theme_name}")
+            output.info("This is an info message")
+            output.success("This is a success message")
+            output.warning("This is a warning message")
+            output.error("This is an error message")
+            output.debug("This is a debug message")
+            output.print("")  # Empty line
+
+        # Restore original theme
+        set_theme(current_theme)
+
+    output.rule("Theme Gallery Complete")
+    output.tip("Use 'chuk-term themes --side-by-side' for compact view")
+    output.hint(f"Current theme restored: {current_theme}")
+
+
+@cli.command()
+@click.option("--run", "-r", "run_example", help="Run a specific example by name")
+@click.option("--list-only", "-l", is_flag=True, help="Only list examples without details")
+def examples(run_example: str | None, list_only: bool) -> None:
+    """List and run available examples."""
+    # Find examples directory
+    package_dir = Path(__file__).parent
+    examples_dir = package_dir.parent.parent / "examples"
+
+    if not examples_dir.exists():
+        output.error(f"Examples directory not found at: {examples_dir}")
+        return
+
+    example_files = sorted(examples_dir.glob("*.py"))
+
+    if not example_files:
+        output.warning("No example files found")
+        return
+
+    if run_example:
+        # Run specific example
+        example_path = examples_dir / f"{run_example}.py"
+        if not example_path.exists():
+            # Try with ui_ prefix
+            example_path = examples_dir / f"ui_{run_example}.py"
+
+        if not example_path.exists():
+            output.error(f"Example '{run_example}' not found")
+            output.hint("Use 'chuk-term examples' to see available examples")
+            return
+
+        output.info(f"Running example: {example_path.name}")
+        output.rule(example_path.stem)
+
+        # Execute the example
+        import subprocess
+
+        try:
+            result = subprocess.run([sys.executable, str(example_path)], check=True)
+            if result.returncode == 0:
+                output.success(f"Example '{example_path.stem}' completed successfully")
+        except subprocess.CalledProcessError as e:
+            output.error(f"Example failed with exit code {e.returncode}")
+        return
+
+    # List examples
+    output.rule("ChukTerm Examples")
+
+    if list_only:
+        for example_file in example_files:
+            output.print(f"  • {example_file.stem}")
+    else:
+        table_data = []
+        for example_file in example_files:
+            # Read first line of docstring for description
+            try:
+                with open(example_file) as f:
+                    lines = f.readlines()
+                    description = "No description"
+                    for line in lines[:10]:  # Check first 10 lines
+                        if '"""' in line or "'''" in line:
+                            # Extract description
+                            description = line.strip("\"' \n")
+                            if description:
+                                break
+                table_data.append({"Name": example_file.stem, "Description": description[:60]})
+            except Exception:
+                table_data.append({"Name": example_file.stem, "Description": "Error reading file"})
+
+        table = format_table(table_data, title="Available Examples")
+        output.print_table(table)
+
+    output.print("\n")
+    output.tip("Run an example: chuk-term examples --run <name>")
+    output.hint(f"Found {len(example_files)} example(s)")
 
 
 def main() -> int:
