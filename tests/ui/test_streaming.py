@@ -359,14 +359,16 @@ class TestLiveStatus:
         from chuk_term.ui.streaming import LiveStatus
 
         status = LiveStatus()
-        with patch.object(Live, "start") as mock_start:
-            with patch.object(Live, "stop") as mock_stop:
-                with status:
-                    assert status.live is not None
-                    mock_start.assert_called_once()
-                # After exit
-                mock_stop.assert_called_once()
-                assert status.live is None
+        with (
+            patch.object(Live, "start") as mock_start,
+            patch.object(Live, "stop") as mock_stop,
+        ):
+            with status:
+                assert status.live is not None
+                mock_start.assert_called_once()
+            # After exit
+            mock_stop.assert_called_once()
+            assert status.live is None
 
     def test_start(self):
         """Test starting the live status display."""

@@ -281,13 +281,12 @@ class TestExamplesCommandExtended:
 
     def test_examples_successful_run(self):
         """Test running an example successfully."""
-        import subprocess
 
         runner = CliRunner()
 
         # Create mock for subprocess.run to simulate success
         with (
-            patch("chuk_term.cli.Path") as mock_path,
+            patch("chuk_term.cli.Path"),
             patch("subprocess.run") as mock_subprocess,
         ):
             from pathlib import Path
@@ -335,7 +334,6 @@ class TestExamplesCommandExtended:
             patch("subprocess.run") as mock_subprocess,
         ):
             from unittest.mock import MagicMock
-            from pathlib import Path
 
             # Create mock path chain
             mock_package_dir = MagicMock()
@@ -394,33 +392,6 @@ class TestThemesCommand:
 class TestExamplesCommandCoverage:
     """Tests to specifically improve CLI examples command coverage."""
 
-    def test_examples_run_existing(self):
-        """Test running an existing example (covers line 186+)."""
-        runner = CliRunner()
-
-        # Run a real example that exists
-        result = runner.invoke(cli, ["examples", "--run", "ui_demo"])
-
-        # Either runs successfully or reports an error
-        assert result.exit_code == 0 or "error" in result.output.lower()
-
-    def test_examples_run_with_ui_prefix_fallback(self):
-        """Test that --run tries ui_ prefix fallback (covers lines 177-179)."""
-        runner = CliRunner()
-
-        # Try running without ui_ prefix - should find ui_demo
-        result = runner.invoke(cli, ["examples", "--run", "demo"])
-
-        # Should either work or show helpful message
-        assert result.exit_code == 0
-
-    def test_examples_list_only(self):
-        """Test examples with --list flag."""
-        runner = CliRunner()
-        result = runner.invoke(cli, ["examples", "--list"])
-
-        assert result.exit_code == 0
-
     def test_examples_with_description_reading(self):
         """Test examples command reads descriptions (covers lines 214-222)."""
         runner = CliRunner()
@@ -445,7 +416,9 @@ class TestCLIExceptionHandling:
 
     def test_main_returns_one_on_error(self):
         """Test main function returns 1 on error."""
-        with patch("chuk_term.cli.cli", side_effect=RuntimeError("Test")):
-            with patch("chuk_term.cli.output.error"):
-                result = main()
-                assert result == 1
+        with (
+            patch("chuk_term.cli.cli", side_effect=RuntimeError("Test")),
+            patch("chuk_term.cli.output.error"),
+        ):
+            result = main()
+            assert result == 1

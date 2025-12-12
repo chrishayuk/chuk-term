@@ -1114,7 +1114,7 @@ class TestSelectMultipleEdgeCases:
 
         mock_ask.side_effect = ["all", "1", ""]
 
-        result = select_multiple("Choose:", ["A", "B", "C", "D"], max_selections=2)
+        select_multiple("Choose:", ["A", "B", "C", "D"], max_selections=2)
         # Should warn and not select all
         mock_ui.warning.assert_called_with("Cannot select all - maximum 2 allowed")
 

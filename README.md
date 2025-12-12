@@ -4,15 +4,15 @@ A modern terminal library with a powerful CLI interface for building beautiful t
 
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Test Coverage](https://img.shields.io/badge/coverage-89%25-brightgreen.svg)](docs/testing/TEST_COVERAGE.md)
-[![Tests](https://img.shields.io/badge/tests-519%20passed-brightgreen.svg)](docs/testing/UNIT_TESTING.md)
+[![Test Coverage](https://img.shields.io/badge/coverage-93%25-brightgreen.svg)](docs/testing/TEST_COVERAGE.md)
+[![Tests](https://img.shields.io/badge/tests-616%20passed-brightgreen.svg)](docs/testing/UNIT_TESTING.md)
 
 ## 🆕 What's New in v0.2
 
 - 📈 **Progress Indicators**: New `progress_bar()`, `track()`, and `spinner()` methods for better user feedback
 - 🎨 **Theme Preview CLI**: `chuk-term themes --side-by-side` to compare all 8 themes
 - 📚 **Examples Browser**: `chuk-term examples` to discover and run examples
-- 🧪 **Improved Testing**: 89% code coverage with 519 passing tests
+- 🧪 **Improved Testing**: 93% code coverage with 616 passing tests
 - 📖 **Better Documentation**: New CONTRIBUTING.md and updated guides
 - 🔧 **Quality Automation**: Pre-commit hooks with latest tools (ruff, black, mypy)
 
@@ -378,7 +378,7 @@ chuk-term/
 │       ├── code.py        # Code display
 │       ├── banners.py     # Banner displays
 │       └── streaming.py   # Streaming message support
-├── tests/                 # Test suite (519 tests, 89% coverage)
+├── tests/                 # Test suite (616 tests, 93% coverage)
 ├── examples/              # Example scripts
 │   ├── ui_demo.py
 │   ├── ui_streaming_*.py # Streaming demonstrations
