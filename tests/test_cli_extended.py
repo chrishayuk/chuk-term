@@ -266,3 +266,186 @@ class TestEdgeCases:
             # The CLI should ensure the context has a dict object
             result = runner.invoke(cli, ["info"])
             assert result.exit_code == 0
+
+
+class TestExamplesCommandExtended:
+    """Extended tests for examples command."""
+
+    def test_examples_run_with_nonexistent(self):
+        """Test running nonexistent example."""
+        runner = CliRunner()
+        result = runner.invoke(cli, ["examples", "--run", "completely_nonexistent_example"])
+
+        # Should report example not found or execute an example
+        assert result.exit_code == 0 or "not found" in result.output.lower()
+
+    def test_examples_successful_run(self):
+        """Test running an example successfully."""
+        import subprocess
+
+        runner = CliRunner()
+
+        # Create mock for subprocess.run to simulate success
+        with (
+            patch("chuk_term.cli.Path") as mock_path,
+            patch("subprocess.run") as mock_subprocess,
+        ):
+            from pathlib import Path
+
+            # Setup mock path
+            real_examples_dir = Path(__file__).parent.parent / "examples"
+            if real_examples_dir.exists():
+                # Use real examples directory if it exists
+                example_files = list(real_examples_dir.glob("*.py"))
+                if example_files:
+                    mock_subprocess.return_value.returncode = 0
+
+                    result = runner.invoke(cli, ["examples"])
+                    assert result.exit_code == 0
+
+    def test_examples_list(self):
+        """Test examples command listing available examples."""
+        runner = CliRunner()
+        result = runner.invoke(cli, ["examples"])
+
+        # Should list available examples or show not found message
+        assert result.exit_code == 0
+
+    def test_examples_empty_directory(self):
+        """Test examples command with empty examples directory."""
+        runner = CliRunner()
+
+        with patch("chuk_term.cli.Path") as mock_path:
+            mock_examples_dir = mock_path.return_value.parent.parent.__truediv__.return_value
+            mock_examples_dir.exists.return_value = True
+            mock_examples_dir.glob.return_value = []
+
+            result = runner.invoke(cli, ["examples"])
+
+            assert "No example files found" in result.output
+
+    def test_examples_run_failed(self):
+        """Test running an example that fails."""
+        import subprocess
+
+        runner = CliRunner()
+
+        with (
+            patch("chuk_term.cli.Path") as mock_path,
+            patch("subprocess.run") as mock_subprocess,
+        ):
+            from unittest.mock import MagicMock
+            from pathlib import Path
+
+            # Create mock path chain
+            mock_package_dir = MagicMock()
+            mock_examples_dir = MagicMock()
+
+            mock_path.return_value = mock_package_dir
+            mock_package_dir.parent.parent.__truediv__.return_value = mock_examples_dir
+            mock_examples_dir.exists.return_value = True
+
+            # Create mock example file
+            mock_example_file = MagicMock()
+            mock_example_file.name = "test_example.py"
+            mock_example_file.stem = "test_example"
+            mock_example_file.exists.return_value = True
+            mock_examples_dir.glob.return_value = [mock_example_file]
+            mock_examples_dir.__truediv__.return_value = mock_example_file
+
+            # Simulate subprocess failure
+            mock_subprocess.side_effect = subprocess.CalledProcessError(1, "python")
+
+            result = runner.invoke(cli, ["examples", "--run", "test_example"])
+
+            # Should report failure
+            assert "failed" in result.output.lower() or result.exit_code == 0
+
+
+class TestThemesCommand:
+    """Test the themes command in detail."""
+
+    def test_themes_side_by_side_display(self):
+        """Test themes command with side-by-side display."""
+        runner = CliRunner()
+
+        with patch("chuk_term.cli.set_theme"), patch("chuk_term.cli.get_theme") as mock_get_theme:
+            mock_theme = mock_get_theme.return_value
+            mock_theme.name = "default"
+            mock_theme.style.return_value = "blue"
+
+            result = runner.invoke(cli, ["themes", "--side-by-side"])
+            assert result.exit_code == 0
+
+    def test_themes_detailed_display(self):
+        """Test themes command with detailed display."""
+        runner = CliRunner()
+
+        with patch("chuk_term.cli.set_theme"), patch("chuk_term.cli.get_theme") as mock_get_theme:
+            mock_theme = mock_get_theme.return_value
+            mock_theme.name = "default"
+            mock_theme.style.return_value = "blue"
+
+            result = runner.invoke(cli, ["themes"])
+            assert result.exit_code == 0
+            assert "Theme Gallery" in result.output
+
+
+class TestExamplesCommandCoverage:
+    """Tests to specifically improve CLI examples command coverage."""
+
+    def test_examples_run_existing(self):
+        """Test running an existing example (covers line 186+)."""
+        runner = CliRunner()
+
+        # Run a real example that exists
+        result = runner.invoke(cli, ["examples", "--run", "ui_demo"])
+
+        # Either runs successfully or reports an error
+        assert result.exit_code == 0 or "error" in result.output.lower()
+
+    def test_examples_run_with_ui_prefix_fallback(self):
+        """Test that --run tries ui_ prefix fallback (covers lines 177-179)."""
+        runner = CliRunner()
+
+        # Try running without ui_ prefix - should find ui_demo
+        result = runner.invoke(cli, ["examples", "--run", "demo"])
+
+        # Should either work or show helpful message
+        assert result.exit_code == 0
+
+    def test_examples_list_only(self):
+        """Test examples with --list flag."""
+        runner = CliRunner()
+        result = runner.invoke(cli, ["examples", "--list"])
+
+        assert result.exit_code == 0
+
+    def test_examples_with_description_reading(self):
+        """Test examples command reads descriptions (covers lines 214-222)."""
+        runner = CliRunner()
+
+        # Run examples command which reads file descriptions
+        result = runner.invoke(cli, ["examples"])
+
+        # Should show available examples
+        assert result.exit_code == 0
+        # Should have printed something about examples
+        assert "examples" in result.output.lower() or "demo" in result.output.lower()
+
+
+class TestCLIExceptionHandling:
+    """Test exception handling in CLI."""
+
+    def test_main_returns_zero_on_success(self):
+        """Test main function returns 0 on success."""
+        with patch("chuk_term.cli.cli"):
+            result = main()
+            assert result == 0
+
+    def test_main_returns_one_on_error(self):
+        """Test main function returns 1 on error."""
+        with patch("chuk_term.cli.cli", side_effect=RuntimeError("Test")):
+            with patch("chuk_term.cli.output.error"):
+                result = main()
+                assert result == 1

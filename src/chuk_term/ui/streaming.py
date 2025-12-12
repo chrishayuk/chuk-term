@@ -197,6 +197,97 @@ class StreamingMessage:
             self.console.print(final_panel)
 
 
+class LiveStatus:
+    """
+    A single-line status display that updates in place.
+
+    Uses Rich's Live display to handle terminal control properly,
+    even when other output might occur during updates.
+
+    Usage:
+        status = LiveStatus()
+        status.start()
+        for i in range(10):
+            status.update(f"Processing {i}/10...")
+            time.sleep(0.1)
+        status.stop()
+
+    Or as a context manager:
+        with LiveStatus() as status:
+            for i in range(10):
+                status.update(f"Processing {i}/10...")
+                time.sleep(0.1)
+    """
+
+    def __init__(
+        self,
+        console: Console | None = None,
+        refresh_per_second: int = 10,
+        transient: bool = True,
+    ):
+        """
+        Initialize a live status display.
+
+        Args:
+            console: Rich console to use (creates one if None)
+            refresh_per_second: Refresh rate for live updates
+            transient: If True, status line disappears when stopped
+        """
+        self.console = console or Console()
+        self.refresh_per_second = refresh_per_second
+        self.transient = transient
+        self.live: Live | None = None
+        self._current_text = ""
+
+    def __enter__(self):
+        """Start the live status display."""
+        self.start()
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        """Stop the live status display."""
+        self.stop()
+
+    def start(self) -> None:
+        """Start the live status display."""
+        if self.live is not None:
+            return  # Already started
+
+        self.live = Live(
+            Text(""),
+            console=self.console,
+            refresh_per_second=self.refresh_per_second,
+            transient=self.transient,
+        )
+        self.live.start()
+
+    def update(self, text: str) -> None:
+        """
+        Update the status text.
+
+        Args:
+            text: New status text to display
+        """
+        if self.live is None:
+            return
+
+        self._current_text = text
+        self.live.update(Text(text))
+
+    def stop(self) -> None:
+        """Stop the live status display."""
+        if self.live is None:
+            return
+
+        self.live.stop()
+        self.live = None
+
+    @property
+    def is_active(self) -> bool:
+        """Check if the live display is currently active."""
+        return self.live is not None
+
+
 class StreamingAssistant:
     """
     Helper class for streaming assistant responses.

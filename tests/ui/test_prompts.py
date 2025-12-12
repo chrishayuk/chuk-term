@@ -817,6 +817,632 @@ class TestInteractiveMultiSelect:
         mock_ui.warning.assert_called_with("Please select at least 2 items")
 
 
+class TestGetKeyFallback:
+    """Test _get_key function fallback path (no termios/msvcrt)."""
+
+    @patch("sys.platform", "linux")
+    @patch("chuk_term.ui.prompts.HAS_TERMIOS", False)
+    @patch("sys.stdin")
+    def test_get_key_fallback_normal(self, mock_stdin):
+        """Test getting normal key in fallback mode."""
+        mock_stdin.read.return_value = "a"
+        # Reload to get fallback path
+        assert _get_key() == "a"
+
+    @patch("sys.platform", "linux")
+    @patch("chuk_term.ui.prompts.HAS_TERMIOS", False)
+    @patch("sys.stdin")
+    def test_get_key_fallback_enter(self, mock_stdin):
+        """Test getting Enter key in fallback mode."""
+        mock_stdin.read.return_value = "\n"
+        assert _get_key() == "enter"
+
+    @patch("sys.platform", "linux")
+    @patch("chuk_term.ui.prompts.HAS_TERMIOS", False)
+    @patch("sys.stdin")
+    def test_get_key_fallback_carriage_return(self, mock_stdin):
+        """Test getting carriage return in fallback mode."""
+        mock_stdin.read.return_value = "\r"
+        assert _get_key() == "enter"
+
+    @patch("sys.platform", "linux")
+    @patch("chuk_term.ui.prompts.HAS_TERMIOS", False)
+    @patch("sys.stdin")
+    def test_get_key_fallback_space(self, mock_stdin):
+        """Test getting Space key in fallback mode."""
+        mock_stdin.read.return_value = " "
+        assert _get_key() == "space"
+
+    @patch("sys.platform", "linux")
+    @patch("chuk_term.ui.prompts.HAS_TERMIOS", False)
+    @patch("sys.stdin")
+    def test_get_key_fallback_ctrl_c(self, mock_stdin):
+        """Test Ctrl+C in fallback mode."""
+        mock_stdin.read.return_value = "\x03"
+        with pytest.raises(KeyboardInterrupt):
+            _get_key()
+
+    @patch("sys.platform", "linux")
+    @patch("chuk_term.ui.prompts.HAS_TERMIOS", False)
+    @patch("sys.stdin")
+    def test_get_key_fallback_exception(self, mock_stdin):
+        """Test exception handling in fallback mode."""
+        mock_stdin.read.side_effect = Exception("Read error")
+        assert _get_key() == ""
+
+
+class TestAskEdgeCases:
+    """Test edge cases for ask function."""
+
+    @patch("chuk_term.ui.prompts.get_theme")
+    @patch("chuk_term.ui.prompts.ui")
+    @patch("chuk_term.ui.prompts.Prompt")
+    def test_ask_none_result_no_default(self, mock_prompt_class, mock_ui, mock_get_theme):
+        """Test ask returns empty string when result is None and no default."""
+        mock_theme = Mock()
+        mock_theme.name = "default"
+        mock_get_theme.return_value = mock_theme
+
+        mock_prompt_class.ask.return_value = None
+        mock_console = Mock()
+        mock_ui.get_raw_console.return_value = mock_console
+
+        result = ask("Enter text:")
+        assert result == ""
+
+    @patch("chuk_term.ui.prompts.get_theme")
+    @patch("chuk_term.ui.prompts.ui")
+    @patch("chuk_term.ui.prompts.Prompt")
+    def test_ask_eof_error_with_default(self, mock_prompt_class, mock_ui, mock_get_theme):
+        """Test ask handles EOFError with default."""
+        mock_theme = Mock()
+        mock_theme.name = "default"
+        mock_get_theme.return_value = mock_theme
+
+        mock_prompt_class.ask.side_effect = EOFError()
+        mock_console = Mock()
+        mock_ui.get_raw_console.return_value = mock_console
+
+        result = ask("Enter text:", default="fallback")
+        assert result == "fallback"
+
+
+class TestConfirmMinimalTheme:
+    """Test confirm function with minimal theme."""
+
+    @patch("chuk_term.ui.prompts.get_theme")
+    @patch("chuk_term.ui.prompts.ui")
+    @patch("chuk_term.ui.prompts.Confirm")
+    def test_confirm_minimal_theme(self, mock_confirm_class, mock_ui, mock_get_theme):
+        """Test confirmation with minimal theme."""
+        mock_theme = Mock()
+        mock_theme.name = "minimal"
+        mock_get_theme.return_value = mock_theme
+
+        mock_confirm_class.ask.return_value = True
+        mock_console = Mock()
+        mock_ui.get_raw_console.return_value = mock_console
+
+        result = confirm("Continue?")
+        assert result is True
+        # Minimal theme should not add styling
+        call_args = mock_confirm_class.ask.call_args
+        assert call_args[0][0] == "Continue?"
+
+
+class TestAskNumberEdgeCases:
+    """Test edge cases for ask_number function."""
+
+    @patch("chuk_term.ui.prompts.get_theme")
+    @patch("chuk_term.ui.prompts.ui")
+    @patch("chuk_term.ui.prompts.FloatPrompt")
+    def test_ask_number_none_result_with_default(self, mock_float_prompt, mock_ui, mock_get_theme):
+        """Test ask_number returns default when result is None."""
+        mock_theme = Mock()
+        mock_theme.name = "default"
+        mock_get_theme.return_value = mock_theme
+
+        # First return None, then valid value
+        mock_float_prompt.ask.side_effect = [None, 5.0]
+        mock_console = Mock()
+        mock_ui.get_raw_console.return_value = mock_console
+
+        result = ask_number("Enter value:", default=3.14)
+        # Since None returned, it should return default
+        assert result == 3.14
+
+    @patch("chuk_term.ui.prompts.get_theme")
+    @patch("chuk_term.ui.prompts.ui")
+    @patch("chuk_term.ui.prompts.FloatPrompt")
+    def test_ask_number_max_value_exceeded(self, mock_float_prompt, mock_ui, mock_get_theme):
+        """Test ask_number with value exceeding max."""
+        mock_theme = Mock()
+        mock_theme.name = "default"
+        mock_get_theme.return_value = mock_theme
+
+        # First return value too large, then valid
+        mock_float_prompt.ask.side_effect = [100.0, 5.0]
+        mock_console = Mock()
+        mock_ui.get_raw_console.return_value = mock_console
+
+        result = ask_number("Enter value:", max_value=10.0)
+        assert result == 5.0
+        mock_ui.warning.assert_called_with("Value must be at most 10.0")
+
+    @patch("chuk_term.ui.prompts.get_theme")
+    @patch("chuk_term.ui.prompts.ui")
+    @patch("chuk_term.ui.prompts.FloatPrompt")
+    def test_ask_number_keyboard_interrupt_with_default(self, mock_float_prompt, mock_ui, mock_get_theme):
+        """Test ask_number returns default on KeyboardInterrupt."""
+        mock_theme = Mock()
+        mock_theme.name = "default"
+        mock_get_theme.return_value = mock_theme
+
+        mock_float_prompt.ask.side_effect = KeyboardInterrupt()
+        mock_console = Mock()
+        mock_ui.get_raw_console.return_value = mock_console
+
+        result = ask_number("Enter value:", default=42.0)
+        assert result == 42.0
+
+    @patch("chuk_term.ui.prompts.get_theme")
+    @patch("chuk_term.ui.prompts.ui")
+    @patch("chuk_term.ui.prompts.FloatPrompt")
+    def test_ask_number_keyboard_interrupt_no_default(self, mock_float_prompt, mock_ui, mock_get_theme):
+        """Test ask_number raises KeyboardInterrupt when no default."""
+        mock_theme = Mock()
+        mock_theme.name = "default"
+        mock_get_theme.return_value = mock_theme
+
+        mock_float_prompt.ask.side_effect = KeyboardInterrupt()
+        mock_console = Mock()
+        mock_ui.get_raw_console.return_value = mock_console
+
+        with pytest.raises(KeyboardInterrupt):
+            ask_number("Enter value:")
+
+
+class TestSelectFromListEdgeCases:
+    """Test edge cases for select_from_list function."""
+
+    @patch("chuk_term.ui.prompts.ask")
+    @patch("chuk_term.ui.prompts.ui")
+    @patch("chuk_term.ui.prompts.get_theme")
+    def test_select_invalid_then_valid(self, mock_get_theme, mock_ui, mock_ask):
+        """Test selection with invalid input followed by valid."""
+        mock_theme = Mock()
+        mock_theme.name = "minimal"
+        mock_get_theme.return_value = mock_theme
+
+        # Invalid selection first, then valid
+        mock_ask.side_effect = ["invalid", "2"]
+
+        result = select_from_list("Choose:", ["Option A", "Option B", "Option C"])
+        assert result == "Option B"
+        mock_ui.warning.assert_called_with("Invalid selection. Please try again.")
+
+    @patch("chuk_term.ui.prompts.ask")
+    @patch("chuk_term.ui.prompts.ui")
+    @patch("chuk_term.ui.prompts.get_theme")
+    def test_select_allow_custom_no_match(self, mock_get_theme, mock_ui, mock_ask):
+        """Test selection with custom input not matching choices."""
+        mock_theme = Mock()
+        mock_theme.name = "default"
+        mock_get_theme.return_value = mock_theme
+
+        # Custom value that doesn't match any choice
+        mock_ask.return_value = ""  # Empty string should reject
+
+        # Need another valid response
+        mock_ask.side_effect = ["", "My Custom"]
+
+        result = select_from_list("Choose:", ["A", "B"], allow_custom=True)
+        assert result == "My Custom"
+
+    @patch("chuk_term.ui.prompts.ask")
+    @patch("chuk_term.ui.prompts.ui")
+    @patch("chuk_term.ui.prompts.get_theme")
+    def test_select_non_minimal_display(self, mock_get_theme, mock_ui, mock_ask):
+        """Test selection display with non-minimal theme."""
+        mock_theme = Mock()
+        mock_theme.name = "default"
+        mock_get_theme.return_value = mock_theme
+
+        mock_ask.return_value = "1"
+
+        result = select_from_list("Choose:", ["Option A", "Option B"], allow_custom=True)
+        assert result == "Option A"
+        # Should show styled output and custom option hint
+        mock_ui.print.assert_any_call("  [dim]Or enter a custom value[/dim]")
+
+
+class TestSelectMultipleEdgeCases:
+    """Test edge cases for select_multiple function."""
+
+    @patch("chuk_term.ui.prompts.ask")
+    @patch("chuk_term.ui.prompts.ui")
+    @patch("chuk_term.ui.prompts.get_theme")
+    def test_select_multiple_done_command(self, mock_get_theme, mock_ui, mock_ask):
+        """Test select_multiple with 'done' command."""
+        mock_theme = Mock()
+        mock_theme.name = "minimal"
+        mock_get_theme.return_value = mock_theme
+
+        mock_ask.side_effect = ["1", "done"]
+
+        result = select_multiple("Choose:", ["A", "B", "C"])
+        assert result == ["A"]
+
+    @patch("chuk_term.ui.prompts.ask")
+    @patch("chuk_term.ui.prompts.ui")
+    @patch("chuk_term.ui.prompts.get_theme")
+    def test_select_multiple_terminal_theme(self, mock_get_theme, mock_ui, mock_ask):
+        """Test select_multiple with terminal theme."""
+        mock_theme = Mock()
+        mock_theme.name = "terminal"
+        mock_get_theme.return_value = mock_theme
+
+        mock_ask.side_effect = ["1", ""]
+
+        result = select_multiple("Choose:", ["A", "B"])
+        assert result == ["A"]
+
+    @patch("chuk_term.ui.prompts.ask")
+    @patch("chuk_term.ui.prompts.ui")
+    @patch("chuk_term.ui.prompts.get_theme")
+    def test_select_multiple_max_selection_exceeded(self, mock_get_theme, mock_ui, mock_ask):
+        """Test select_multiple when max selections exceeded."""
+        mock_theme = Mock()
+        mock_theme.name = "minimal"
+        mock_get_theme.return_value = mock_theme
+
+        # Select 1, try to select 2 and 3 (exceeds max of 2), then done
+        mock_ask.side_effect = ["1 2", "3", ""]
+
+        result = select_multiple("Choose:", ["A", "B", "C", "D"], max_selections=2)
+        assert len(result) <= 2
+        mock_ui.warning.assert_called_with("Maximum 2 selections allowed")
+
+    @patch("chuk_term.ui.prompts.ask")
+    @patch("chuk_term.ui.prompts.ui")
+    @patch("chuk_term.ui.prompts.get_theme")
+    def test_select_multiple_all_exceeds_max(self, mock_get_theme, mock_ui, mock_ask):
+        """Test select_multiple when 'all' exceeds max selections."""
+        mock_theme = Mock()
+        mock_theme.name = "default"
+        mock_get_theme.return_value = mock_theme
+
+        mock_ask.side_effect = ["all", "1", ""]
+
+        result = select_multiple("Choose:", ["A", "B", "C", "D"], max_selections=2)
+        # Should warn and not select all
+        mock_ui.warning.assert_called_with("Cannot select all - maximum 2 allowed")
+
+    @patch("chuk_term.ui.prompts.ask")
+    @patch("chuk_term.ui.prompts.ui")
+    @patch("chuk_term.ui.prompts.get_theme")
+    def test_select_multiple_invalid_range(self, mock_get_theme, mock_ui, mock_ask):
+        """Test select_multiple with invalid range input."""
+        mock_theme = Mock()
+        mock_theme.name = "minimal"
+        mock_get_theme.return_value = mock_theme
+
+        mock_ask.side_effect = ["a-b", "1", ""]  # Invalid range, then valid
+
+        result = select_multiple("Choose:", ["A", "B", "C"])
+        assert "A" in result
+        mock_ui.warning.assert_called_with("Invalid range: a-b")
+
+    @patch("chuk_term.ui.prompts.ask")
+    @patch("chuk_term.ui.prompts.ui")
+    @patch("chuk_term.ui.prompts.get_theme")
+    def test_select_multiple_out_of_range(self, mock_get_theme, mock_ui, mock_ask):
+        """Test select_multiple with out of range number."""
+        mock_theme = Mock()
+        mock_theme.name = "minimal"
+        mock_get_theme.return_value = mock_theme
+
+        mock_ask.side_effect = ["99", "1", ""]  # Out of range, then valid
+
+        result = select_multiple("Choose:", ["A", "B", "C"])
+        assert result == ["A"]
+        mock_ui.warning.assert_called_with("Invalid number: 99 (out of range)")
+
+    @patch("chuk_term.ui.prompts.ask")
+    @patch("chuk_term.ui.prompts.ui")
+    @patch("chuk_term.ui.prompts.get_theme")
+    def test_select_multiple_toggle_off(self, mock_get_theme, mock_ui, mock_ask):
+        """Test select_multiple toggling an item off."""
+        mock_theme = Mock()
+        mock_theme.name = "minimal"
+        mock_get_theme.return_value = mock_theme
+
+        # Select 1, then toggle 1 off, then done
+        mock_ask.side_effect = ["1", "1", ""]
+
+        result = select_multiple("Choose:", ["A", "B", "C"])
+        assert "A" not in result
+
+
+class TestInteractiveSelectEdgeCases:
+    """Test edge cases for _interactive_select function."""
+
+    @patch("sys.stdout")
+    @patch("chuk_term.ui.prompts._get_key")
+    @patch("chuk_term.ui.prompts.ui")
+    @patch("chuk_term.ui.prompts.get_theme")
+    def test_interactive_select_vim_keys(self, mock_get_theme, mock_ui, mock_get_key, mock_stdout):
+        """Test interactive selection with vim keys (j/k)."""
+        mock_theme = Mock()
+        mock_theme.name = "default"
+        mock_get_theme.return_value = mock_theme
+
+        # Simulate: j (down), j (down), k (up), enter
+        mock_get_key.side_effect = ["j", "j", "k", "enter"]
+
+        choices = ["A", "B", "C"]
+        result = _interactive_select("Choose:", choices)
+
+        assert result == "B"  # Started at 0, +1, +1, -1 = index 1
+
+    @patch("sys.stdout")
+    @patch("chuk_term.ui.prompts._get_key")
+    @patch("chuk_term.ui.prompts.ui")
+    @patch("chuk_term.ui.prompts.get_theme")
+    def test_interactive_select_terminal_theme(self, mock_get_theme, mock_ui, mock_get_key, mock_stdout):
+        """Test interactive selection with terminal theme."""
+        mock_theme = Mock()
+        mock_theme.name = "terminal"
+        mock_get_theme.return_value = mock_theme
+
+        mock_get_key.return_value = "enter"
+
+        choices = ["A", "B", "C"]
+        result = _interactive_select("Choose:", choices)
+
+        assert result == "A"
+
+    @patch("sys.stdout")
+    @patch("chuk_term.ui.prompts._get_key")
+    @patch("chuk_term.ui.prompts.ui")
+    @patch("chuk_term.ui.prompts.get_theme")
+    def test_interactive_select_minimal_theme(self, mock_get_theme, mock_ui, mock_get_key, mock_stdout):
+        """Test interactive selection with minimal theme."""
+        mock_theme = Mock()
+        mock_theme.name = "minimal"
+        mock_get_theme.return_value = mock_theme
+
+        mock_get_key.return_value = "enter"
+
+        choices = ["A", "B", "C"]
+        result = _interactive_select("Choose:", choices)
+
+        assert result == "A"
+
+    @patch("sys.stdout")
+    @patch("chuk_term.ui.prompts._get_key")
+    @patch("chuk_term.ui.prompts.ui")
+    @patch("chuk_term.ui.prompts.get_theme")
+    def test_interactive_select_with_default(self, mock_get_theme, mock_ui, mock_get_key, mock_stdout):
+        """Test interactive selection with default value."""
+        mock_theme = Mock()
+        mock_theme.name = "default"
+        mock_get_theme.return_value = mock_theme
+
+        mock_get_key.return_value = "enter"
+
+        choices = ["A", "B", "C"]
+        result = _interactive_select("Choose:", choices, default="B")
+
+        assert result == "B"  # Should start at default
+
+    @patch("sys.stdout")
+    @patch("chuk_term.ui.prompts._get_key")
+    @patch("chuk_term.ui.prompts.ui")
+    @patch("chuk_term.ui.prompts.get_theme")
+    def test_interactive_select_wrap_around(self, mock_get_theme, mock_ui, mock_get_key, mock_stdout):
+        """Test interactive selection wrapping around."""
+        mock_theme = Mock()
+        mock_theme.name = "default"
+        mock_get_theme.return_value = mock_theme
+
+        # Up from 0 should wrap to last item
+        mock_get_key.side_effect = ["up", "enter"]
+
+        choices = ["A", "B", "C"]
+        result = _interactive_select("Choose:", choices)
+
+        assert result == "C"  # Wrapped to last item
+
+
+class TestInteractiveMultiSelectEdgeCases:
+    """Test edge cases for _interactive_multi_select function."""
+
+    @patch("sys.stdout")
+    @patch("time.sleep")
+    @patch("chuk_term.ui.prompts._get_key")
+    @patch("chuk_term.ui.prompts.ui")
+    @patch("chuk_term.ui.prompts.get_theme")
+    def test_interactive_multi_select_terminal_theme(
+        self, mock_get_theme, mock_ui, mock_get_key, mock_sleep, mock_stdout
+    ):
+        """Test interactive multi-selection with terminal theme."""
+        mock_theme = Mock()
+        mock_theme.name = "terminal"
+        mock_get_theme.return_value = mock_theme
+
+        mock_get_key.side_effect = ["space", "enter"]
+
+        choices = ["A", "B", "C"]
+        result = _interactive_multi_select("Choose:", choices)
+
+        assert result == ["A"]
+
+    @patch("sys.stdout")
+    @patch("time.sleep")
+    @patch("chuk_term.ui.prompts._get_key")
+    @patch("chuk_term.ui.prompts.ui")
+    @patch("chuk_term.ui.prompts.get_theme")
+    def test_interactive_multi_select_minimal_theme(
+        self, mock_get_theme, mock_ui, mock_get_key, mock_sleep, mock_stdout
+    ):
+        """Test interactive multi-selection with minimal theme."""
+        mock_theme = Mock()
+        mock_theme.name = "minimal"
+        mock_get_theme.return_value = mock_theme
+
+        mock_get_key.side_effect = ["space", "enter"]
+
+        choices = ["A", "B"]
+        result = _interactive_multi_select("Choose:", choices)
+
+        assert result == ["A"]
+
+    @patch("sys.stdout")
+    @patch("time.sleep")
+    @patch("chuk_term.ui.prompts._get_key")
+    @patch("chuk_term.ui.prompts.ui")
+    @patch("chuk_term.ui.prompts.get_theme")
+    def test_interactive_multi_select_quit(self, mock_get_theme, mock_ui, mock_get_key, mock_sleep, mock_stdout):
+        """Test quitting interactive multi-selection."""
+        mock_theme = Mock()
+        mock_theme.name = "default"
+        mock_get_theme.return_value = mock_theme
+
+        mock_get_key.return_value = "q"
+
+        with pytest.raises(KeyboardInterrupt):
+            _interactive_multi_select("Choose:", ["A", "B"])
+
+    @patch("sys.stdout")
+    @patch("time.sleep")
+    @patch("chuk_term.ui.prompts._get_key")
+    @patch("chuk_term.ui.prompts.ui")
+    @patch("chuk_term.ui.prompts.get_theme")
+    def test_interactive_multi_select_max_exceeded(
+        self, mock_get_theme, mock_ui, mock_get_key, mock_sleep, mock_stdout
+    ):
+        """Test max selections warning in interactive mode."""
+        mock_theme = Mock()
+        mock_theme.name = "default"
+        mock_get_theme.return_value = mock_theme
+
+        # Select first, move down, try select second (exceeds max), then enter
+        mock_get_key.side_effect = ["space", "down", "space", "enter"]
+
+        choices = ["A", "B", "C"]
+        result = _interactive_multi_select("Choose:", choices, max_selections=1)
+
+        assert result == ["A"]
+        mock_ui.warning.assert_called_with("Maximum 1 selections allowed")
+
+    @patch("sys.stdout")
+    @patch("time.sleep")
+    @patch("chuk_term.ui.prompts._get_key")
+    @patch("chuk_term.ui.prompts.ui")
+    @patch("chuk_term.ui.prompts.get_theme")
+    def test_interactive_multi_select_with_default(
+        self, mock_get_theme, mock_ui, mock_get_key, mock_sleep, mock_stdout
+    ):
+        """Test interactive multi-selection with default selections."""
+        mock_theme = Mock()
+        mock_theme.name = "default"
+        mock_get_theme.return_value = mock_theme
+
+        mock_get_key.return_value = "enter"
+
+        choices = ["A", "B", "C"]
+        result = _interactive_multi_select("Choose:", choices, default=["A", "C"])
+
+        assert set(result) == {"A", "C"}
+
+    @patch("sys.stdout")
+    @patch("time.sleep")
+    @patch("chuk_term.ui.prompts._get_key")
+    @patch("chuk_term.ui.prompts.ui")
+    @patch("chuk_term.ui.prompts.get_theme")
+    def test_interactive_multi_select_all_exceeds_max(
+        self, mock_get_theme, mock_ui, mock_get_key, mock_sleep, mock_stdout
+    ):
+        """Test 'all' key when would exceed max selections."""
+        mock_theme = Mock()
+        mock_theme.name = "default"
+        mock_get_theme.return_value = mock_theme
+
+        # Try 'a' (all), then just confirm with what's selected
+        mock_get_key.side_effect = ["a", "space", "enter"]
+
+        choices = ["A", "B", "C", "D"]
+        result = _interactive_multi_select("Choose:", choices, max_selections=2)
+
+        # 'a' should not select all, then space selects first
+        assert len(result) <= 2
+
+
+class TestCreateMenuEdgeCases:
+    """Test edge cases for create_menu function."""
+
+    @patch("chuk_term.ui.prompts.ask")
+    @patch("chuk_term.ui.prompts.ui")
+    @patch("chuk_term.ui.prompts.get_theme")
+    def test_create_menu_invalid_then_valid(self, mock_get_theme, mock_ui, mock_ask):
+        """Test menu with invalid selection followed by valid."""
+        mock_theme = Mock()
+        mock_theme.name = "minimal"
+        mock_get_theme.return_value = mock_theme
+
+        # Invalid then valid
+        mock_ask.side_effect = ["", "invalid", "1"]
+
+        options = {"opt1": "Option 1"}
+        result = create_menu("Menu", options, back_option=False, quit_option=False)
+
+        assert result == "opt1"
+        mock_ui.warning.assert_called_with("Invalid selection")
+
+    @patch("chuk_term.ui.prompts.ask")
+    @patch("chuk_term.ui.prompts.ui")
+    @patch("chuk_term.ui.prompts.get_theme")
+    def test_create_menu_terminal_theme(self, mock_get_theme, mock_ui, mock_ask):
+        """Test menu display with terminal theme."""
+        mock_theme = Mock()
+        mock_theme.name = "terminal"
+        mock_get_theme.return_value = mock_theme
+
+        mock_ask.return_value = "1"
+
+        options = {"opt1": "Option 1"}
+        result = create_menu("Menu", options, back_option=False, quit_option=False)
+
+        assert result == "opt1"
+        # Terminal theme uses simple text display
+        mock_ui.print.assert_any_call("\nMenu")
+
+
+class TestToolConfirmationEdgeCases:
+    """Test edge cases for prompt_for_tool_confirmation."""
+
+    @patch("chuk_term.ui.prompts.confirm")
+    @patch("chuk_term.ui.prompts.ui")
+    @patch("chuk_term.ui.prompts.get_theme")
+    def test_tool_confirmation_json_error(self, mock_get_theme, mock_ui, mock_confirm):
+        """Test tool confirmation with non-serializable arguments."""
+        mock_theme = Mock()
+        mock_theme.name = "default"
+        mock_get_theme.return_value = mock_theme
+
+        mock_confirm.return_value = True
+
+        # Use an object that can't be JSON serialized
+        class NonSerializable:
+            pass
+
+        result = prompt_for_tool_confirmation("test_tool", {"obj": NonSerializable()})
+
+        assert result is True
+        # Should fall back to str() representation
+
+
 @pytest.fixture(autouse=True)
 def reset_modules():
     """Reset module state after each test."""

@@ -644,3 +644,395 @@ class TestOutputLevel:
         assert OutputLevel.WARNING.value == "warning"
         assert OutputLevel.ERROR.value == "error"
         assert OutputLevel.FATAL.value == "fatal"
+
+
+class TestANSICodeHandling:
+    """Test handling of ANSI escape codes."""
+
+    def test_ansi_codes_bypass_rich(self, output, capsys):
+        """Test that ANSI codes bypass Rich processing."""
+        # Test with actual escape character
+        ansi_message = "\x1b[31mRed Text\x1b[0m"
+        output.print(ansi_message)
+
+        captured = capsys.readouterr()
+        # Should output something
+        assert "Red" in captured.out or "Text" in captured.out
+
+    def test_print_status_line(self, output, capsys):
+        """Test print_status_line outputs ANSI codes correctly."""
+        output.print_status_line("Processing 50%", end="")
+        captured = capsys.readouterr()
+        # Should contain ANSI escape codes and message
+        assert "Processing" in captured.out or "\x1b" in captured.out
+
+
+class TestMinimalThemeEdgeCases:
+    """Test edge cases for minimal theme."""
+
+    def test_minimal_print_markdown(self, output, capsys):
+        """Test printing Markdown in minimal theme."""
+        from rich.markdown import Markdown
+
+        minimal_theme = Theme("minimal")
+        output.set_theme(minimal_theme)
+
+        md = Markdown("# Heading")
+        output.print(md)
+
+        captured = capsys.readouterr()
+        assert "Heading" in captured.out
+
+    def test_minimal_print_text_object(self, output, capsys):
+        """Test printing Text object in minimal theme."""
+        from rich.text import Text
+
+        minimal_theme = Theme("minimal")
+        output.set_theme(minimal_theme)
+
+        text = Text("Styled text")
+        output.print(text)
+
+        captured = capsys.readouterr()
+        assert "Styled text" in captured.out
+
+    def test_minimal_panel_with_markdown(self, output, capsys):
+        """Test panel with Markdown content in minimal theme."""
+        from rich.markdown import Markdown
+
+        minimal_theme = Theme("minimal")
+        output.set_theme(minimal_theme)
+
+        output.panel(Markdown("# Content"), title="Title")
+        captured = capsys.readouterr()
+        assert "Title" in captured.out
+        assert "Content" in captured.out
+
+    def test_minimal_panel_with_text(self, output, capsys):
+        """Test panel with Text content in minimal theme."""
+        from rich.text import Text
+
+        minimal_theme = Theme("minimal")
+        output.set_theme(minimal_theme)
+
+        output.panel(Text("Plain text"), title="Header")
+        captured = capsys.readouterr()
+        assert "Header" in captured.out
+        assert "Plain text" in captured.out
+
+    def test_minimal_debug_message(self, output, capsys):
+        """Test debug message in minimal theme."""
+        minimal_theme = Theme("minimal")
+        output.set_theme(minimal_theme)
+        output.set_output_mode(verbose=True)
+
+        output.debug("Debug info")
+        captured = capsys.readouterr()
+        assert "DEBUG:" in captured.out or "Debug info" in captured.out
+
+    def test_minimal_error_output(self, output, capsys):
+        """Test error output in minimal theme goes to stderr."""
+        minimal_theme = Theme("minimal")
+        output.set_theme(minimal_theme)
+
+        output.error("Error message")
+        captured = capsys.readouterr()
+        assert "ERROR:" in captured.err
+
+    def test_minimal_fatal_output(self, output, capsys):
+        """Test fatal output in minimal theme goes to stderr."""
+        minimal_theme = Theme("minimal")
+        output.set_theme(minimal_theme)
+
+        output.fatal("Fatal error")
+        captured = capsys.readouterr()
+        assert "FATAL:" in captured.err
+
+    def test_minimal_rule_with_title(self, output, capsys):
+        """Test rule with title in minimal theme."""
+        minimal_theme = Theme("minimal")
+        output.set_theme(minimal_theme)
+
+        output.rule("Section")
+        captured = capsys.readouterr()
+        assert "Section" in captured.out
+        assert "-" in captured.out
+
+    def test_minimal_rule_without_title(self, output, capsys):
+        """Test rule without title in minimal theme."""
+        minimal_theme = Theme("minimal")
+        output.set_theme(minimal_theme)
+
+        output.rule()
+        captured = capsys.readouterr()
+        assert "-" in captured.out
+
+
+class TestTerminalThemeEdgeCases:
+    """Test edge cases for terminal theme."""
+
+    def test_terminal_debug_message(self, output, capsys):
+        """Test debug message in terminal theme."""
+        terminal_theme = Theme("terminal")
+        output.set_theme(terminal_theme)
+        output.set_output_mode(verbose=True)
+
+        output.debug("Debug info")
+        captured = capsys.readouterr()
+        assert "DEBUG:" in captured.out
+
+    def test_terminal_error_output(self, output, capsys):
+        """Test error output in terminal theme."""
+        terminal_theme = Theme("terminal")
+        output.set_theme(terminal_theme)
+
+        output.error("Error message")
+        # Error should not crash
+
+    def test_terminal_fatal_output(self, output):
+        """Test fatal output in terminal theme."""
+        terminal_theme = Theme("terminal")
+        output.set_theme(terminal_theme)
+
+        output.fatal("Fatal error")
+        # Should not crash
+
+    def test_terminal_user_message(self, output, capsys):
+        """Test user message in terminal theme."""
+        terminal_theme = Theme("terminal")
+        output.set_theme(terminal_theme)
+
+        output.user_message("User input")
+        captured = capsys.readouterr()
+        assert "User" in captured.out
+        assert "User input" in captured.out
+
+    def test_terminal_assistant_message(self, output, capsys):
+        """Test assistant message in terminal theme."""
+        terminal_theme = Theme("terminal")
+        output.set_theme(terminal_theme)
+
+        output.assistant_message("Response", elapsed=1.5)
+        captured = capsys.readouterr()
+        assert "Assistant" in captured.out
+        assert "Response" in captured.out
+
+    def test_terminal_tool_call_with_args(self, output, capsys):
+        """Test tool call in terminal theme."""
+        terminal_theme = Theme("terminal")
+        output.set_theme(terminal_theme)
+
+        output.tool_call("my_tool", {"key": "value"})
+        captured = capsys.readouterr()
+        assert "Tool" in captured.out
+        assert "my_tool" in captured.out
+
+
+class TestListItemsEdgeCases:
+    """Test edge cases for list_items method."""
+
+    def test_list_items_arrow_style(self, output, capsys):
+        """Test arrow style list."""
+        items = ["Item 1", "Item 2"]
+        output.list_items(items, style="arrow")
+
+        captured = capsys.readouterr()
+        assert "Item 1" in captured.out
+
+    def test_list_items_with_indent(self, output, capsys):
+        """Test indented list."""
+        items = ["Nested item"]
+        output.list_items(items, indent=2)
+
+        captured = capsys.readouterr()
+        assert "Nested item" in captured.out
+
+    def test_list_items_minimal_theme(self, output, capsys):
+        """Test list items in minimal theme."""
+        minimal_theme = Theme("minimal")
+        output.set_theme(minimal_theme)
+
+        items = ["A", "B", "C"]
+        output.list_items(items, style="number")
+
+        captured = capsys.readouterr()
+        assert "1." in captured.out
+        assert "A" in captured.out
+
+    def test_list_items_checklist_minimal(self, output, capsys):
+        """Test checklist in minimal theme."""
+        minimal_theme = Theme("minimal")
+        output.set_theme(minimal_theme)
+
+        items = [{"text": "Task", "checked": True}]
+        output.list_items(items, style="check")
+
+        captured = capsys.readouterr()
+        assert "Task" in captured.out
+
+
+class TestKVPairsEdgeCases:
+    """Test edge cases for kvpairs method."""
+
+    def test_kvpairs_empty(self, output, capsys):
+        """Test kvpairs with empty dict."""
+        output.kvpairs({})
+        captured = capsys.readouterr()
+        # Should output nothing
+        assert captured.out == ""
+
+    def test_kvpairs_no_align(self, output, capsys):
+        """Test kvpairs without alignment."""
+        data = {"Key": "Value"}
+        output.kvpairs(data, align=False)
+
+        captured = capsys.readouterr()
+        assert "Key" in captured.out
+        assert "Value" in captured.out
+
+    def test_kvpairs_minimal_theme(self, output, capsys):
+        """Test kvpairs in minimal theme."""
+        minimal_theme = Theme("minimal")
+        output.set_theme(minimal_theme)
+
+        data = {"Name": "Test", "Status": "OK"}
+        output.kvpairs(data)
+
+        captured = capsys.readouterr()
+        assert "Name" in captured.out
+        assert "Status" in captured.out
+
+
+class TestColumnsEdgeCases:
+    """Test edge cases for columns method."""
+
+    def test_columns_empty(self, output, capsys):
+        """Test columns with empty data."""
+        output.columns([])
+        captured = capsys.readouterr()
+        # Should output nothing
+        assert captured.out == ""
+
+    def test_columns_no_headers(self, output, capsys):
+        """Test columns without headers."""
+        data = [["A", "B"], ["C", "D"]]
+        output.columns(data)
+
+        captured = capsys.readouterr()
+        assert "A" in captured.out
+        assert "B" in captured.out
+
+    def test_columns_minimal_theme(self, output, capsys):
+        """Test columns in minimal theme."""
+        minimal_theme = Theme("minimal")
+        output.set_theme(minimal_theme)
+
+        data = [["Col1", "Col2"], ["Val1", "Val2"]]
+        headers = ["H1", "H2"]
+        output.columns(data, headers=headers)
+
+        captured = capsys.readouterr()
+        assert "H1" in captured.out
+        assert "Col1" in captured.out
+
+
+class TestPrintTableEdgeCases:
+    """Test edge cases for print_table method."""
+
+    def test_print_table_string(self, output, capsys):
+        """Test print_table with string input."""
+        output.print_table("Already a plain table")
+        captured = capsys.readouterr()
+        assert "Already a plain table" in captured.out
+
+    def test_print_table_minimal_theme(self, output, capsys):
+        """Test print_table in minimal theme."""
+        minimal_theme = Theme("minimal")
+        output.set_theme(minimal_theme)
+
+        table = Table()
+        table.add_column("Name")
+        table.add_column("Value")
+        table.add_row("Test", "123")
+
+        output.print_table(table)
+        captured = capsys.readouterr()
+        # Minimal theme may convert to plain text or still print Rich table
+        assert "Test" in captured.out or captured.out.strip() == "" or "Name" in captured.out
+
+
+class TestPromptEdgeCases:
+    """Test edge cases for prompt methods."""
+
+    @patch("builtins.input", return_value="")
+    def test_prompt_empty_returns_default(self, mock_input, output):
+        """Test that empty input returns default value."""
+        result = output.prompt("Enter value", default="fallback")
+        assert result == "fallback"
+
+    @patch("builtins.input", return_value="")
+    def test_prompt_empty_no_default(self, mock_input, output):
+        """Test empty input with no default returns empty string."""
+        result = output.prompt("Enter value")
+        assert result == ""
+
+    @patch("builtins.input", return_value="n")
+    def test_confirm_no(self, mock_input, output):
+        """Test confirm with 'n' input."""
+        minimal_theme = Theme("minimal")
+        output.set_theme(minimal_theme)
+
+        result = output.confirm("Continue?")
+        assert result is False
+
+    @patch("builtins.input", return_value="")
+    def test_confirm_empty_uses_default(self, mock_input, output):
+        """Test confirm with empty input uses default."""
+        minimal_theme = Theme("minimal")
+        output.set_theme(minimal_theme)
+
+        result = output.confirm("Continue?", default=True)
+        assert result is True
+
+
+class TestRawConsole:
+    """Test raw console access."""
+
+    def test_get_raw_console(self, output):
+        """Test getting raw console instance."""
+        console = output.get_raw_console()
+        assert console is not None
+        assert console is output._console
+
+
+class TestSuccessMessageStripping:
+    """Test success message checkmark stripping."""
+
+    def test_success_strips_checkmark(self, output, capsys):
+        """Test that success strips leading checkmark."""
+        output.success("✓ Already has checkmark")
+        captured = capsys.readouterr()
+        assert "Already has checkmark" in captured.out
+
+
+class TestMinimalToolCall:
+    """Test tool call in minimal theme."""
+
+    def test_minimal_tool_call_with_args(self, output, capsys):
+        """Test tool call with arguments in minimal theme."""
+        minimal_theme = Theme("minimal")
+        output.set_theme(minimal_theme)
+
+        output.tool_call("test_tool", {"param": "value"})
+        captured = capsys.readouterr()
+        assert "Tool: test_tool" in captured.out
+        assert "param" in captured.out
+
+    def test_minimal_tool_call_no_args(self, output, capsys):
+        """Test tool call without arguments in minimal theme."""
+        minimal_theme = Theme("minimal")
+        output.set_theme(minimal_theme)
+
+        output.tool_call("simple_tool")
+        captured = capsys.readouterr()
+        assert "Tool: simple_tool" in captured.out

@@ -77,6 +77,7 @@ from chuk_term.ui.prompts import (
 
 # Streaming support
 from chuk_term.ui.streaming import (
+    LiveStatus,
     StreamingAssistant,
     StreamingMessage,
 )
@@ -164,4 +165,5 @@ __all__ = [
     # Streaming
     "StreamingMessage",
     "StreamingAssistant",
+    "LiveStatus",
 ]

@@ -326,6 +326,152 @@ class TestStreamingAssistant:
             assert assistant.stream is None
 
 
+class TestLiveStatus:
+    """Test LiveStatus class."""
+
+    def test_initialization(self):
+        """Test LiveStatus initialization."""
+        from chuk_term.ui.streaming import LiveStatus
+
+        status = LiveStatus()
+        assert status.live is None
+        assert status.console is not None
+        assert status.refresh_per_second == 10
+        assert status.transient is True
+        assert status._current_text == ""
+
+    def test_initialization_with_params(self):
+        """Test LiveStatus initialization with custom parameters."""
+        from chuk_term.ui.streaming import LiveStatus
+
+        console = Console()
+        status = LiveStatus(
+            console=console,
+            refresh_per_second=5,
+            transient=False,
+        )
+        assert status.console == console
+        assert status.refresh_per_second == 5
+        assert status.transient is False
+
+    def test_context_manager(self):
+        """Test LiveStatus as context manager."""
+        from chuk_term.ui.streaming import LiveStatus
+
+        status = LiveStatus()
+        with patch.object(Live, "start") as mock_start:
+            with patch.object(Live, "stop") as mock_stop:
+                with status:
+                    assert status.live is not None
+                    mock_start.assert_called_once()
+                # After exit
+                mock_stop.assert_called_once()
+                assert status.live is None
+
+    def test_start(self):
+        """Test starting the live status display."""
+        from chuk_term.ui.streaming import LiveStatus
+
+        status = LiveStatus()
+        with patch.object(Live, "start") as mock_start:
+            status.start()
+            assert status.live is not None
+            mock_start.assert_called_once()
+
+    def test_start_already_started(self):
+        """Test start when already started does nothing."""
+        from chuk_term.ui.streaming import LiveStatus
+
+        status = LiveStatus()
+        status.live = Mock(spec=Live)
+
+        # Start should not create a new Live
+        with patch.object(Live, "start") as mock_start:
+            status.start()
+            mock_start.assert_not_called()
+
+    def test_update(self):
+        """Test updating the status text."""
+        from chuk_term.ui.streaming import LiveStatus
+
+        status = LiveStatus()
+        status.live = Mock(spec=Live)
+
+        status.update("Test status")
+        assert status._current_text == "Test status"
+        status.live.update.assert_called_once()
+
+    def test_update_no_live(self):
+        """Test update when live is None does nothing."""
+        from chuk_term.ui.streaming import LiveStatus
+
+        status = LiveStatus()
+        status.update("Test")  # Should not crash
+        assert status._current_text == ""
+
+    def test_stop(self):
+        """Test stopping the live status display."""
+        from chuk_term.ui.streaming import LiveStatus
+
+        status = LiveStatus()
+        mock_live = Mock(spec=Live)
+        status.live = mock_live
+
+        status.stop()
+        mock_live.stop.assert_called_once()
+        assert status.live is None
+
+    def test_stop_no_live(self):
+        """Test stop when live is None does nothing."""
+        from chuk_term.ui.streaming import LiveStatus
+
+        status = LiveStatus()
+        status.stop()  # Should not crash
+
+    def test_is_active(self):
+        """Test is_active property."""
+        from chuk_term.ui.streaming import LiveStatus
+
+        status = LiveStatus()
+        assert status.is_active is False
+
+        status.live = Mock(spec=Live)
+        assert status.is_active is True
+
+    def test_full_flow(self):
+        """Test complete LiveStatus flow."""
+        from chuk_term.ui.streaming import LiveStatus
+
+        status = LiveStatus()
+        status.start()
+        assert status.is_active
+
+        status.update("Processing...")
+        assert status._current_text == "Processing..."
+
+        status.update("Almost done...")
+        assert status._current_text == "Almost done..."
+
+        status.stop()
+        assert not status.is_active
+
+
+class TestStreamingMessageUpdate:
+    """Test StreamingMessage update when live is None."""
+
+    def test_update_no_live(self):
+        """Test update when live is None."""
+        msg = StreamingMessage()
+        msg.update("Test")
+        assert msg.content == "Test"  # Content updates even without live
+
+    def test_set_content_no_live(self):
+        """Test set_content when live is None."""
+        msg = StreamingMessage()
+        msg.set_content("Full content")
+        assert msg.content == "Full content"
+
+
 class TestIntegration:
     """Integration tests for streaming functionality."""
 
